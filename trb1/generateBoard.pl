@@ -50,6 +50,10 @@ generateBoard(N, Board) :-
     length(Row, N),
     maplist(=('.'), Row),
     maplist(=(Row), Board).
-
-%init(Board).
-
+    
+init(Board, N) :-
+    Row_pieces is N / 2 - 1,
+    N_pieces is Row_pieces * N / 2,
+    addPieces(Board, `\u25cb`, 0, N_pieces, N),
+    Black_start is (row_pieces + 2) * N,
+    addPieces(Board, `\u25cf`, Black_start, N_pieces, N).
