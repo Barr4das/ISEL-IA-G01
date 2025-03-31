@@ -1,5 +1,5 @@
 
-letters(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']).
+letters(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']).
 
 first([], []).
 first(X, [X|_]).
@@ -23,6 +23,12 @@ printBoard([], _).
 printBoard([], 0).
 
 printBoard([Row| Tail], N) :-
+    N < 10 -> 
+        write(' '),
+        printBoardHelper([Row|Tail], N);
+    printBoardHelper([Row|Tail], N).
+
+printBoardHelper([Row|Tail], N) :-
     print_item(N),
     printList(Row),
     print_item(N),
@@ -30,14 +36,14 @@ printBoard([Row| Tail], N) :-
     N1 is N - 1,
     printBoard(Tail, N1).
 
-print_checkers(Board) :-
-    write('   '),
+print_checkers(N, Board) :-
+    write('    '),
     letters(Letters),
-    printList(Letters, 5),
+    printList(Letters, N),
     nl,
-    printBoard(Board, 5),
-    write('   '),
-    printList(Letters, 5).
+    printBoard(Board, N),
+    write('    '),
+    printList(Letters, N).
 
 generateBoard(N, Board) :-
     length(Board, N), 
