@@ -36,7 +36,7 @@ printBoardHelper([Row|Tail], N) :-
     N1 is N - 1,
     printBoard(Tail, N1).
 
-print_checkers(N, Board) :-
+print_checkers(Board, N) :-
     write('    '),
     letters(Letters),
     printList(Letters, N),
@@ -45,15 +45,17 @@ print_checkers(N, Board) :-
     write('    '),
     printList(Letters, N).
 
-generateBoard(N, Board) :-
+generateBoard(Board, N) :-
     length(Board, N), 
     length(Row, N),
     maplist(=('.'), Row),
     maplist(=(Row), Board).
-    
-init(Board, N) :-
-    Row_pieces is N / 2 - 1,
-    N_pieces is Row_pieces * N / 2,
-    addPieces(Board, `\u25cb`, 0, N_pieces, N),
-    Black_start is (row_pieces + 2) * N,
-    addPieces(Board, `\u25cf`, Black_start, N_pieces, N).
+
+add_pieces_even(PlayerSymbol, [_, H | T], [PlayerSymbol, H | T]).
+
+add_pieces(_, [], _).
+add_pieces(_, [_], [_]).
+
+add_pieces(PlayerSymbol, [HI, HI2 | TI], [HO, HI2 | Rest]) :-
+    add_pieces_even(PlayerSymbol, [HI, HI2 | TI], [HO, HI2 | _]),
+    add_pieces(PlayerSymbol, TI, Rest).
