@@ -43,7 +43,8 @@ print_checkers(Board, N) :-
     nl,
     printBoard(Board, N),
     write('    '),
-    printList(Letters, N).
+    printList(Letters, N),
+    nl.
 
 generateBoard(Board, N) :-
     length(Board, N), 
@@ -104,12 +105,22 @@ replace_nth0(List, Index, OldElem, NewElem, NewList) :-
    nth0(Index,List,OldElem,Transfer),
    nth0(Index,NewList,NewElem,Transfer).
 
-%play(YStart, XStart, YFinish, XFinish, BoardIn, BoardOut) :-
-%    nht1(YStart, BoardIn, XList),
-%    nht1(XIndex, XList, XStart),
-%    replace().
+play(YStart, XStart, YFinish, XFinish, BoardIn, BoardOut) :-
+    nth0(YStart, BoardIn, YList),
+    replace_nth0(YList, XStart, '\u25cb', '.', NewYList),
+    % falta substituição de colocação
+    replace_nth0(BoardIn, YStart, YList, NewYList, BoardOut).
 
-test_replace :-
-    List = [0,1,2,3,4,5,6,7,8,9],
-    replace_nth0(List, 3, 4, 'djuro', Output),
-    write(Output).
+test_play :-
+    Board_size = 8,
+    generateBoard(Board, Board_size),
+    Player_rows is (Board_size-2) // 2,
+    fill_board(Board, Player_rows, 0, FinalBoard),
+    print_checkers(FinalBoard, Board_size), nl,
+    TableY = 8,
+    TableX = 'C',
+    letters(Letters),
+    nth0(Y, Letters, TableX),
+    X is 8 - TableY,
+    play(Y, X, 0, 0, FinalBoard, FinalFinalBoard),
+    print_checkers(FinalFinalBoard, Board_size).
