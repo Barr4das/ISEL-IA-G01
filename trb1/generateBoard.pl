@@ -120,7 +120,11 @@ test_play :-
     TableY = 8,
     TableX = 'C',
     letters(Letters),
-    nth0(Y, Letters, TableX),
-    X is 8 - TableY,
+    nth0(X, Letters, TableX),
+    Y is 8 - TableY,
     play(Y, X, 0, 0, FinalBoard, FinalFinalBoard),
     print_checkers(FinalFinalBoard, Board_size).
+
+read_input(PlayerNumber,X, Y) :-
+    format("Player ~w (row/column): ", [PlayerNumber]),
+    read(Input).
