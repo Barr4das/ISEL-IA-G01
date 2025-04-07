@@ -69,7 +69,7 @@ fill_board([HI | TI], Player_rows, Idx, [HO | TO]) :-
     fill_board(TI, Player_rows, New_idx, TO).
 
 fill_board([HI | TI], Player_rows, Idx, [HO | TO]) :-
-    Idx >= (Player_rows * 2) - 1, !,
+    Idx >= Player_rows + 2, !,
     New_idx is Idx + 1,
     process_row(HI, '\u25cf', Idx, HO),
     fill_board(TI, Player_rows, New_idx, TO).
@@ -93,7 +93,23 @@ test:-
     fill_board(Board, Player_rows, 0, FinalBoard),
     print_checkers(FinalBoard, Board_size).
 
-test_pieces :-
-    TestList = ['.','.','.','.','.','.','.'],
-    add_pieces("L", TestList, Ret),
-    write(Ret).
+test2:-
+    Board_size = 10,
+    generateBoard(Board, Board_size),
+    Player_rows is (Board_size-2) // 2,
+    fill_board(Board, Player_rows, 0, FinalBoard),
+    print_checkers(FinalBoard, Board_size).
+
+replace_nth0(List, Index, OldElem, NewElem, NewList) :-
+   nth0(Index,List,OldElem,Transfer),
+   nth0(Index,NewList,NewElem,Transfer).
+
+%play(YStart, XStart, YFinish, XFinish, BoardIn, BoardOut) :-
+%    nht1(YStart, BoardIn, XList),
+%    nht1(XIndex, XList, XStart),
+%    replace().
+
+test_replace :-
+    List = [0,1,2,3,4,5,6,7,8,9],
+    replace_nth0(List, 3, 4, 'djuro', Output),
+    write(Output).
