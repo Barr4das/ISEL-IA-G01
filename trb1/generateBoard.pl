@@ -87,20 +87,6 @@ process_row(Row, Piece, Idx, Result) :-
     ;   add_pieces(Piece, Row, Result)
     ).
 
-test:-
-    Board_size = 8,
-    generateBoard(Board, Board_size),
-    Player_rows is (Board_size-2) // 2,
-    fill_board(Board, Player_rows, 0, FinalBoard),
-    print_checkers(FinalBoard, Board_size).
-
-test2:-
-    Board_size = 10,
-    generateBoard(Board, Board_size),
-    Player_rows is (Board_size-2) // 2,
-    fill_board(Board, Player_rows, 0, FinalBoard),
-    print_checkers(FinalBoard, Board_size).
-
 replace_nth0(List, Index, OldElem, NewElem, NewList) :-
    nth0(Index,List,OldElem,Transfer),
    nth0(Index,NewList,NewElem,Transfer).
@@ -125,6 +111,33 @@ test_play :-
     play(Y, X, 0, 0, FinalBoard, FinalFinalBoard),
     print_checkers(FinalFinalBoard, Board_size).
 
-read_input(PlayerNumber,X, Y) :-
+% POSSIBLY HAS ERROR
+read_input(PlayerNumber,X1,Y1,X2,Y2) :-
     format("Player ~w (row/column): ", [PlayerNumber]),
-    read(Input).
+    read(YI1/XI1/YI2/XI2),
+    Y1 is 8 - YI1,
+    Y2 is 8 - YI2,
+    letters(Letters),
+    nth0(X1, Letters, XI1),
+    nth0(X2, Letters, XI2).
+
+%game_logic(Board) :-
+%    forcedMoves(Board, ForcedMoves).
+
+forcedMoves(Board, Board_size, Y, X, ForcedMoves) :-
+    Temp is Board_size - 1,
+    Y < Board_size, !.
+
+forcedMoves(Board, Board_size, Y, X, ForcedMoves) :-
+    Temp is Board_size - 1,
+    X == Temp, !.
+
+game:-
+    Board_size = 8,
+    Player_rows is (Board_size-2) // 2,
+    generateBoard(Board, Board_size),
+    %game_logic(Board),
+    fill_board(Board, Player_rows, 0, FinalBoard),
+    print_checkers(FinalBoard, Board_size),
+    read_input(1, X1, Y1, X2, Y2).
+    %game.
