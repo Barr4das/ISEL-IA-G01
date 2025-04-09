@@ -104,7 +104,7 @@ string_length(String, Length) :-
 validate_input_n_args(First, Second) :-
     string_length(First, L1), string_length(Second, L2),
     L1 =:= 2, L2 =:= 2 -> true;
-    write("Burro di merda aprende a escrever..."), nl, fail.
+    write("INPUT ERROR"), nl, fail.
 
 read_input(PlayerNumber) :-
     format("Player ~w (row/column): ", [PlayerNumber]),
@@ -119,13 +119,7 @@ read_input(PlayerNumber) :-
     Y2 is 8 - Ycalc2,
     letters(Letters),
     nth0(X1, Letters, XIn1),
-    nth0(X2, Letters, XIn2),
-    write(Y1),
-    write(" "),
-    write(X1),nl,
-    write(Y2),
-    write(" "),
-    write(X2).
+    nth0(X2, Letters, XIn2).
 
 game:-
     Board_size = 8,
