@@ -91,11 +91,14 @@ replace_nth0(List, Index, OldElem, NewElem, NewList) :-
    nth0(Index,List,OldElem,Transfer),
    nth0(Index,NewList,NewElem,Transfer).
 
-play(XStart, YStart, XFinish, YFinish, BoardIn, BoardOut) :-
+% only does the movement (no logic envolved)
+play(PlayerSymbol, XStart, YStart, XFinish, YFinish, BoardIn, BoardOut) :-
     nth0(YStart, BoardIn, YList),
-    replace_nth0(YList, XStart, '\u25cb', '.', NewYList),
-    % falta substituição de colocação
-    replace_nth0(BoardIn, YStart, YList, NewYList, BoardOut).
+    replace_nth0(YList, XStart, PlayerSymbol, '.', NewYList),
+    replace_nth0(BoardIn, YStart, YList, NewYList, BoardOutTemp),
+    nth0(YFinish, BoardOutTemp, YList2), 
+    replace_nth0(YList2, XFinish, '.', PlayerSymbol, NewYList2),
+    replace_nth0(BoardOutTemp, YFinish, YList2, NewYList2, BoardOut).
 
 string_length(String, Length) :-
     atom_chars(String, ListVar),
@@ -106,7 +109,7 @@ validate_input_n_args(First, Second) :-
     L1 =:= 2, L2 =:= 2 -> true;
     write("INPUT ERROR"), nl, fail.
 
-read_input(PlayerNumber) :-
+read_input(PlayerNumber, X1, Y1, X2, Y2) :-
     format("Player ~w (row/column): ", [PlayerNumber]),
     read_string(user, "\n", "\r", _, Response),
     split_string(Response, " ", "", [Start, Finish]), !,
@@ -121,13 +124,104 @@ read_input(PlayerNumber) :-
     nth0(X1, Letters, XIn1),
     nth0(X2, Letters, XIn2).
 
-game:-
-    Board_size = 8,
+up_right(Board, Board_size, XIn, YIn, XOut, YOut, PieceSymbol) :-
+    YOut is YIn - 1,
+    XOut is XIn + 1,
+    BoardSizeDec is Board_size - 1,
+    YOut >= 0, XOut =< BoardSizeDec -> 
+        nth0(YOut, Board, YList),
+        nth0(XOut, YList, PieceSymbol);
+    write("NO UP RIGHT POS"), nl, fail.
+
+up_left(Board, XIn, YIn, XOut, YOut, PieceSymbol) :-
+    YOut is YIn - 1,
+    XOut is XIn - 1,
+    YOut >= 0, XOut >= 0 -> 
+        nth0(YOut, Board, YList),
+        nth0(XOut, YList, PieceSymbol);
+    write("NO UP LEFT POS"), nl, fail.
+
+down_right(Board, Board_size, XIn, YIn, XOut, YOut, PieceSymbol) :-
+    YOut is YIn + 1,
+    XOut is XIn + 1,
+    YOut =< Board_size, XOut =< Board_size ->
+        nth0(YOut, Board, YList),
+        nth0(XOut, YList, PieceSymbol);
+    write("NO DOWN RIGHT POS"), nl, fail.
+
+down_left(Board, Board_size, XIn, YIn, XOut, YOut, PieceSymbol) :-
+    YOut is YIn + 1,
+    XOut is XIn - 1,
+    YOut =< Board_size, XOut >= 0 ->
+        nth0(YOut, Board, YList),
+        nth0(XOut, YList, PieceSymbol);
+    write("NO DOWN RIGHT POS"), nl, fail.
+
+opposite_piece(Player, Color) :-
+    Player =:= '●'; Player =:= 'Q' ->
+        Color = "WHITE";
+    Color = "BLACK".
+
+% Board, 8, ○, 7, 7, [] 
+has_forced_move(Board, Board_size, PlayerPiece, XIn, YIn, ForcedMoves) :-
+    PlayerPiece =:= 'Q'; PlayerPiece =:= 'q' ->
+        %todo
+        write("NOT YET IMPLEMENTED");
+    down_left(Board, Board_size, XIn, YIn, XOut, YOut, PieceDLeft),
+    % todo
+    opposite_piece(PlayerPiece, OpponentColor),
+    opposite_piece(PieceDLeft, PlayerColor),
+    
+    PlayerColor \= Opponent ->
+        down_left(Board, Board_size, XOut, YOut, XOut2, YOut2, PieceDLeft2),
+        PieceDLeft2 =:= '.' ->
+            append(ForcedMoves, [XIn, YIn, XOut2, YOut2]);
+        %nothing
+
+    down_right(Board, Board_size, XIn, YIn, XOut, YOut, PieceDRight),
+    % todo
+    opposite_piece(PlayerPiece, OpponentColor),
+    opposite_piece(PieceDRight, PlayerColor),
+
+    PlayerColor \= Opponent ->
+        down_right(Board, Board_size, XOut, YOut, XOut2, YOut2, PieceDRight2),
+        PieceDRight2 =:= '.' ->
+            append(ForcedMoves, [XIn, YIn, XOut2, YOut2]);
+        %nothing
+
+    up_right(Board, Board_size, XIn, YIn, XOut, YOut, PieceURight),
+    % todo
+    opposite_piece(PlayerPiece, OpponentColor),
+    opposite_piece(PieceURight, PlayerColor),
+
+    PlayerColor \= Opponent ->
+        up_right(Board, Board_size, XOut, YOut, XOut2, YOut2, PieceURight2),
+        PieceURight2 =:= '.' ->
+            append(ForcedMoves, [XIn, YIn, XOut2, YOut2]);
+        %nothing
+
+    up_left(Board, XOut, YOut, XOut2, YOut2, PieceULeft2),
+    % todo
+    opposite_piece(PlayerPiece, OpponentColor),
+    opposite_piece(PieceULeft, PlayerColor),
+
+    PlayerColor \= Opponent ->
+        up_left(Board, Board_size, XOut, YOut, XOut2, YOut2, PieceULeft2),
+        PieceULeft2 =:= '.' ->
+            append(ForcedMoves, [XIn, YIn, XOut2, YOut2]);
+        %nothing
+
+
+test :-
+    Board_size = 4,
     Player_rows is (Board_size-2) // 2,
     generateBoard(Board, Board_size),
-    %game_logic(Board),
     fill_board(Board, Player_rows, 0, FinalBoard),
     print_checkers(FinalBoard, Board_size),
-    read_input(1, X1, Y1, X2, Y2),
-    play(X1, Y2, X2, Y2, FinalBoard, FinalFinalBoard),
-    print_checkers(FinalFinalBoard, Board_size).
+    read_input(1, X1, Y1, X2, Y2).
+    %down_right(FinalBoard, Board_size, X1, Y1, XOut, YOut, PieceSymbol),
+    %print_item(XOut), print_item(YOut), print_item(PieceSymbol), nl.
+    %print_item(Y1), print_item(X1), nl,
+    %print_item(Y2), print_item(X2), nl,
+    %play('\u25cb', X1, Y1, X2, Y2, FinalBoard, FinalFinalBoard),
+    %print_checkers(FinalFinalBoard, Board_size).
