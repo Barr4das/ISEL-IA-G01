@@ -198,9 +198,22 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1) :-
 
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 0) :-
     LastX =:= Board_size ->
+        player_number(PlayerSymbol, PlayerNumber),
+        read_input(PlayerNumber, X1, Y1, X2, Y2), % leitura de input
+        (
+            \+ valid_coordinate(Board_size, X1, Y1), 
+            \+ valid_coordinate(Board_size, X2, Y2) ->
+
+        )
         piece_color(PlayerSymbol, Color),
-        player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
-        read_input()
+        player_forced_moves(Board, Board_size, Color, PlayerForcedMoves), % verificação de jogadas forçadas
+        (
+            PlayerForcedMoves \= [] ->
+                % verify legal move
+                write("NOT YET IMPLEMENTED");
+            verify_legal_move(Board, Boar)
+        )
+
         % verify if player_forced_moves is empty
     % move continuação
 
