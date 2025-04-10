@@ -16,6 +16,9 @@ opponent_color('♕', black).
 opponent_color('♛', white).
 opponent_color('.', none).
 
+player_number('○', 1).
+player_number('●', 2).
+
 first([], []).
 first(X, [X|_]).
 
@@ -82,13 +85,13 @@ fill_board([], _, _, []).
 fill_board([HI | TI], Player_rows, Idx, [HO | TO]) :-
     Idx < Player_rows, !,
     New_idx is Idx + 1,
-    process_row(HI, '\u25cb', Idx, HO),
+    process_row(HI, '\u25cf', Idx, HO),
     fill_board(TI, Player_rows, New_idx, TO).
 
 fill_board([HI | TI], Player_rows, Idx, [HO | TO]) :-
     Idx >= Player_rows + 2, !,
     New_idx is Idx + 1,
-    process_row(HI, '\u25cf', Idx, HO),
+    process_row(HI, '\u25cb', Idx, HO),
     fill_board(TI, Player_rows, New_idx, TO).
 
 fill_board([HI | TI], Player_rows, Idx, [HI | TO]) :-
@@ -108,7 +111,7 @@ replace_nth0(List, Index, OldElem, NewElem, NewList) :-
    nth0(Index,NewList,NewElem,Transfer).
 
 % only does the movement (no logic envolved)
-play(PlayerSymbol, XStart, YStart, XFinish, YFinish, BoardIn, BoardOut) :-
+move(PlayerSymbol, XStart, YStart, XFinish, YFinish, BoardIn, BoardOut) :-
     nth0(YStart, BoardIn, YList),
     replace_nth0(YList, XStart, PlayerSymbol, '.', NewYList),
     replace_nth0(BoardIn, YStart, YList, NewYList, BoardOutTemp),
@@ -175,18 +178,6 @@ has_forced_move(Board, Board_size, XIn, YIn, ForcedMoves) :-
         ForcedMovesList),
     append([XIn, YIn], ForcedMovesList, ForcedMoves).
 
-/*
-piece_forced_moves(Board, Board_size, Color, X, Y, PlayerForcedMoves) :-
-    nth0(Y, Board, YList),
-    nth0(X, YList, Pos),
-    Pos \= '.' ->
-        piece_color(Pos, Color), 
-        has_forced_move(Board, Board_size, X, Y, PieceForcedMoves),  
-        append(PieceForcedMoves, PlayerForcedMoves, PlayerForcedMoves);
-    true.  
-*/  
-
-%TEST
 player_forced_moves(Board, Board_size, Color, PlayerForcedMoves) :-
     MaxIdx is Board_size-1,
     findall(Move,
@@ -202,6 +193,30 @@ player_forced_moves(Board, Board_size, Color, PlayerForcedMoves) :-
         Moves),
     append(Moves, [], PlayerForcedMoves).
 
+play(Board, Board_size, PlayerSymbol, LastX, LastY, 1) :-
+    write("NOT YET IMPLEMENTED").
+
+play(Board, Board_size, PlayerSymbol, LastX, LastY, 0) :-
+    LastX =:= Board_size ->
+        piece_color(PlayerSymbol, Color),
+        player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
+        read_input()
+        % verify if player_forced_moves is empty
+    % move continuação
+
+checkers(Board_size) :-
+    write("Welcome to the Checkers Prolog game!"),
+
+    % base board preparation
+    generateBoard(InitialBoard, Board_size),
+    Player_rows is (Board_size-2) // 2,
+    fill_board(InitialBoard, Player_rows, 0, FilledBoard),
+
+    % VERIFY IF PLAYING WITH BOT
+
+
+    %player action
+    play(FilledBoard, Board_size, '●', Board_size, Board_size, 0).
 
 test :-
     Board_size = 8,
@@ -214,7 +229,7 @@ test :-
     %print_item(XOut), print_item(YOut), print_item(PieceSymbol), nl.
     print_item(Y1), print_item(X1), nl,
     print_item(Y2), print_item(X2), nl,
-    play('\u25cf', X1, Y1, X2, Y2, FinalBoard, FinalFinalBoard),
+    move('\u25cf', X1, Y1, X2, Y2, FinalBoard, FinalFinalBoard),
     print_checkers(FinalFinalBoard, Board_size).
 
 test_forced_moves :-
