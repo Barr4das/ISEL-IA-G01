@@ -198,7 +198,7 @@ has_forced_move(Board, Board_size, XIn, YIn, ForcedMoves) :-
     nth0(YIn, Board, YList),
     nth0(XIn, YList, Piece),
     opponent_color(Piece, OpponentColor),
-    findall([XIn, YIn, XEnd, YEnd], 
+    findall([XEnd, YEnd], 
         (   
             is_capture_possible(Board, Board_size, XIn, YIn, -1, 1, OpponentColor, XEnd, YEnd);
             is_capture_possible(Board, Board_size, XIn, YIn, 1, 1, OpponentColor, XEnd, YEnd);
