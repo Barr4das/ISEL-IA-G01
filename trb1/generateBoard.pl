@@ -1,19 +1,19 @@
 
 letters(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']).
 
-is_queen('Q').
-is_queen('q').
+is_queen('♕').
+is_queen('♛').
 
 piece_color('○', white).
 piece_color('●', black).
-piece_color('q', white).
-piece_color('Q', black).
+piece_color('♕', white).
+piece_color('♛', black).
 piece_color('.', none).
 
 opponent_color('○', black).
 opponent_color('●', white).
-opponent_color('q', black).
-opponent_color('Q', white).
+opponent_color('♕', black).
+opponent_color('♛', white).
 opponent_color('.', none).
 
 first([], []).
@@ -30,15 +30,16 @@ printList([Head | Tail]) :-
 printList([], _).
 printList(_, 0).
 printList([Head | Tail], N) :-
-    print_item(Head),
-    N1 is N - 1,
-    printList(Tail, N1).
+    N > 0 -> 
+        print_item(Head),
+        N1 is N - 1,
+        printList(Tail, N1).
 
 printBoard([], _).
 printBoard([], 0).
 
 printBoard([Row| Tail], N) :-
-    N < 10 -> 
+    N > 0, N < 10 -> 
         write(' '),
         printBoardHelper([Row|Tail], N);
     printBoardHelper([Row|Tail], N).
@@ -139,39 +140,6 @@ read_input(PlayerNumber, X1, Y1, X2, Y2) :-
     nth0(X1, Letters, XIn1),
     nth0(X2, Letters, XIn2).
 
-up_right(Board, Board_size, XIn, YIn, XOut, YOut, PieceSymbol) :-
-    YOut is YIn - 1,
-    XOut is XIn + 1,
-    BoardSizeDec is Board_size - 1,
-    YOut >= 0, XOut =< BoardSizeDec -> 
-        nth0(YOut, Board, YList),
-        nth0(XOut, YList, PieceSymbol);
-    write("NO UP RIGHT POS"), nl, fail.
-
-up_left(Board, XIn, YIn, XOut, YOut, PieceSymbol) :-
-    YOut is YIn - 1,
-    XOut is XIn - 1,
-    YOut >= 0, XOut >= 0 -> 
-        nth0(YOut, Board, YList),
-        nth0(XOut, YList, PieceSymbol);
-    write("NO UP LEFT POS"), nl, fail.
-
-down_right(Board, Board_size, XIn, YIn, XOut, YOut, PieceSymbol) :-
-    YOut is YIn + 1,
-    XOut is XIn + 1,
-    YOut =< Board_size, XOut =< Board_size ->
-        nth0(YOut, Board, YList),
-        nth0(XOut, YList, PieceSymbol);
-    write("NO DOWN RIGHT POS"), nl, fail.
-
-down_left(Board, Board_size, XIn, YIn, XOut, YOut, PieceSymbol) :-
-    YOut is YIn + 1,
-    XOut is XIn - 1,
-    YOut =< Board_size, XOut >= 0 ->
-        nth0(YOut, Board, YList),
-        nth0(XOut, YList, PieceSymbol);
-    write("NO DOWN RIGHT POS"), nl, fail.
-
 % has_forced_move(Board, Board_size, PlayerPiece, XIn, YIn, ForcedMoves) :-
 
 valid_coordinate(Board_size, X, Y) :-
@@ -187,25 +155,53 @@ is_capture_possible(Board, Board_size, XIn, YIn,  XTranslation, YTranslation, Op
     valid_coordinate(Board_size, XEnd, YEnd),
     nth0(Y1, Board, YList1),
     nth0(X1, YList1, XVal),
-    piece_color(XVal, PieceColor1),
-    PieceColor1 = OpponentColor,
+    piece_color(XVal, PieceColor),
+    PieceColor = OpponentColor,
     nth0(YEnd, Board, EndRow),
     nth0(XEnd, EndRow, EndPiece),
     EndPiece = '.'.
 
-% FALTA TESTAR 
 has_forced_move(Board, Board_size, XIn, YIn, ForcedMoves) :-
     nth0(YIn, Board, YList),
     nth0(XIn, YList, Piece),
     opponent_color(Piece, OpponentColor),
     findall([XEnd, YEnd], 
-        (   
-            is_capture_possible(Board, Board_size, XIn, YIn, -1, 1, OpponentColor, XEnd, YEnd);
-            is_capture_possible(Board, Board_size, XIn, YIn, 1, 1, OpponentColor, XEnd, YEnd);
+        (
+            is_capture_possible(Board, Board_size, XIn, YIn, -1,  1, OpponentColor, XEnd, YEnd);
+            is_capture_possible(Board, Board_size, XIn, YIn,  1,  1, OpponentColor, XEnd, YEnd);
             is_capture_possible(Board, Board_size, XIn, YIn, -1, -1, OpponentColor, XEnd, YEnd);
-            is_capture_possible(Board, Board_size, XIn, YIn, 1, -1, OpponentColor, XEnd, YEnd)
+            is_capture_possible(Board, Board_size, XIn, YIn,  1, -1, OpponentColor, XEnd, YEnd)
         ), 
-        ForcedMoves).
+        ForcedMovesList),
+    append([XIn, YIn], ForcedMovesList, ForcedMoves).
+
+/*
+piece_forced_moves(Board, Board_size, Color, X, Y, PlayerForcedMoves) :-
+    nth0(Y, Board, YList),
+    nth0(X, YList, Pos),
+    Pos \= '.' ->
+        piece_color(Pos, Color), 
+        has_forced_move(Board, Board_size, X, Y, PieceForcedMoves),  
+        append(PieceForcedMoves, PlayerForcedMoves, PlayerForcedMoves);
+    true.  
+*/  
+
+%TEST
+player_forced_moves(Board, Board_size, Color, PlayerForcedMoves) :-
+    MaxIdx is Board_size-1,
+    findall(Move,
+        (   
+            between(0, MaxIdx, Y),
+            between(0, MaxIdx, X),
+            nth0(Y, Board, Row),
+            nth0(X, Row, Piece),
+            Piece \= '.',
+            piece_color(Piece, Color),
+            has_forced_move(Board, Board_size, X, Y, Move)
+        ),
+        Moves),
+    append(Moves, [], PlayerForcedMoves).
+
 
 test :-
     Board_size = 8,
@@ -213,13 +209,13 @@ test :-
     generateBoard(Board, Board_size),
     fill_board(Board, Player_rows, 0, FinalBoard),
     print_checkers(FinalBoard, Board_size),
-    read_input(1, X1, Y1, X2, Y2).
+    read_input(1, X1, Y1, X2, Y2),
     %down_right(FinalBoard, Board_size, X1, Y1, XOut, YOut, PieceSymbol),
     %print_item(XOut), print_item(YOut), print_item(PieceSymbol), nl.
-    %print_item(Y1), print_item(X1), nl,
-    %print_item(Y2), print_item(X2), nl,
-    %play('\u25cb', X1, Y1, X2, Y2, FinalBoard, FinalFinalBoard),
-    %print_checkers(FinalFinalBoard, Board_size).
+    print_item(Y1), print_item(X1), nl,
+    print_item(Y2), print_item(X2), nl,
+    play('\u25cf', X1, Y1, X2, Y2, FinalBoard, FinalFinalBoard),
+    print_checkers(FinalFinalBoard, Board_size).
 
 test_forced_moves :-
     Board = [
@@ -235,6 +231,7 @@ test_forced_moves :-
     Board_size = 8,
     XIn = 3, YIn = 3,  % Coordenadas da peça branca '○'
     has_forced_move(Board, Board_size, XIn, YIn, ForcedMoves),
+    %[ X, Y | FMoves]
     write("should return : [1,5], [5,5] returned : "), write(ForcedMoves), nl,
     Board2 = [
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
@@ -259,6 +256,39 @@ test_forced_moves :-
         ['.', '.', '.', '.', '.', '.', '.', '.']   
     ],
     has_forced_move(Board3, Board_size, XIn, YIn, ForcedMoves3),
-    write("should return : [] returned : "), write(ForcedMoves3), nl.
+    write("should return : [] returned : "), write(ForcedMoves3), nl,
+    Board4 = [
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '○', '.', '.', '.', '.'],  
+        ['.', '.', '●', '.', '●', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.'], 
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.']   
+    ],
+    Board_size = 8,
+    XIn1 = 2, YIn1 = 4,  % Coordenadas da peça preta '●'
+    has_forced_move(Board4, Board_size, XIn1, YIn1, ForcedMoves4),
+    %[ X, Y | FMoves]
+    write("should return : [4, 2] returned : "), write(ForcedMoves4), nl,
+    XIn2 = 4, YIn2 = 4,  % Coordenadas da peça preta '●'
+    has_forced_move(Board4, Board_size, XIn2, YIn2, ForcedMoves5),
+    %[ X, Y | FMoves]
+    write("should return : [2, 2] returned : "), write(ForcedMoves5), nl.
 
-
+test_player_forced_moves :-
+    Board = [
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '○', '.', '.', '.', '.'],  
+        ['.', '.', '●', '.', '●', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.'], 
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.']   
+    ],
+    Board_size = 8,
+    Color = black,
+    player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
+    write("should return : [[3,3,[1,5],[5,5]]] returned : "), write(PlayerForcedMoves), nl.
