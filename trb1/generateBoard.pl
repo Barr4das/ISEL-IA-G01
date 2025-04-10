@@ -235,7 +235,7 @@ test_forced_moves :-
     Board_size = 8,
     XIn = 3, YIn = 3,  % Coordenadas da peça branca '○'
     has_forced_move(Board, Board_size, XIn, YIn, ForcedMoves),
-    write("2 Forced moves for piece at (3,3): "), write(ForcedMoves), nl,
+    write("should return : [1,5], [5,5] returned : "), write(ForcedMoves), nl,
     Board2 = [
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
@@ -247,7 +247,7 @@ test_forced_moves :-
         ['.', '.', '.', '.', '.', '.', '.', '.']   
     ],
     has_forced_move(Board2, Board_size, XIn, YIn, ForcedMoves2),
-    write("4 Forced moves for piece at (3,3): "), write(ForcedMoves2), nl,
+    write("should return : [1,5], [5,5], [1,1], [5,1] returned : "), write(ForcedMoves2), nl,
     Board3 = [
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
@@ -259,6 +259,6 @@ test_forced_moves :-
         ['.', '.', '.', '.', '.', '.', '.', '.']   
     ],
     has_forced_move(Board3, Board_size, XIn, YIn, ForcedMoves3),
-    write("No Forced moves for piece at (3,3): "), write(ForcedMoves3), nl.
+    write("should return : [] returned : "), write(ForcedMoves3), nl.
 
 
