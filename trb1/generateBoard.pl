@@ -1,6 +1,21 @@
 
 letters(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']).
 
+is_queen('Q').
+is_queen('q').
+
+piece_color('○', white).
+piece_color('●', black).
+piece_color('q', white).
+piece_color('Q', black).
+piece_color('.', none).
+
+opponent_color('○', black).
+opponent_color('●', white).
+opponent_color('q', black).
+opponent_color('Q', white).
+opponent_color('.', none).
+
 first([], []).
 first(X, [X|_]).
 
@@ -157,63 +172,43 @@ down_left(Board, Board_size, XIn, YIn, XOut, YOut, PieceSymbol) :-
         nth0(XOut, YList, PieceSymbol);
     write("NO DOWN RIGHT POS"), nl, fail.
 
-opposite_piece(Player, Color) :-
-    Player =:= '●'; Player =:= 'Q' ->
-        Color = "WHITE";
-    Color = "BLACK".
+% has_forced_move(Board, Board_size, PlayerPiece, XIn, YIn, ForcedMoves) :-
 
-% Board, 8, ○, 7, 7, [] 
-has_forced_move(Board, Board_size, PlayerPiece, XIn, YIn, ForcedMoves) :-
-    PlayerPiece =:= 'Q'; PlayerPiece =:= 'q' ->
-        %todo
-        write("NOT YET IMPLEMENTED");
-    down_left(Board, Board_size, XIn, YIn, XOut, YOut, PieceDLeft),
-    % todo
-    opposite_piece(PlayerPiece, OpponentColor),
-    opposite_piece(PieceDLeft, PlayerColor),
-    
-    PlayerColor \= Opponent ->
-        down_left(Board, Board_size, XOut, YOut, XOut2, YOut2, PieceDLeft2),
-        PieceDLeft2 =:= '.' ->
-            append(ForcedMoves, [XIn, YIn, XOut2, YOut2]);
-        %nothing
+valid_coordinate(Board_size, X, Y) :-
+    X >= 0, Y >= 0,
+    X < Board_size, Y < Board_size.
 
-    down_right(Board, Board_size, XIn, YIn, XOut, YOut, PieceDRight),
-    % todo
-    opposite_piece(PlayerPiece, OpponentColor),
-    opposite_piece(PieceDRight, PlayerColor),
+is_capture_possible(Board, Board_size, XIn, YIn,  XTranslation, YTranslation, OpponentColor, XEnd, YEnd) :-
+    X1 is XIn + XTranslation,
+    Y1 is YIn + YTranslation,
+    valid_coordinate(Board_size, X1, Y1),
+    XEnd is XIn + (2 * XTranslation),
+    YEnd is YIn + (2 * YTranslation),
+    valid_coordinate(Board_size, XEnd, YEnd),
+    nth0(Y1, Board, YList1),
+    nth0(X1, YList1, XVal),
+    piece_color(XVal, PieceColor1),
+    PieceColor1 = OpponentColor,
+    nth0(YEnd, Board, EndRow),
+    nth0(XEnd, EndRow, EndPiece),
+    EndPiece = '.'.
 
-    PlayerColor \= Opponent ->
-        down_right(Board, Board_size, XOut, YOut, XOut2, YOut2, PieceDRight2),
-        PieceDRight2 =:= '.' ->
-            append(ForcedMoves, [XIn, YIn, XOut2, YOut2]);
-        %nothing
-
-    up_right(Board, Board_size, XIn, YIn, XOut, YOut, PieceURight),
-    % todo
-    opposite_piece(PlayerPiece, OpponentColor),
-    opposite_piece(PieceURight, PlayerColor),
-
-    PlayerColor \= Opponent ->
-        up_right(Board, Board_size, XOut, YOut, XOut2, YOut2, PieceURight2),
-        PieceURight2 =:= '.' ->
-            append(ForcedMoves, [XIn, YIn, XOut2, YOut2]);
-        %nothing
-
-    up_left(Board, XOut, YOut, XOut2, YOut2, PieceULeft2),
-    % todo
-    opposite_piece(PlayerPiece, OpponentColor),
-    opposite_piece(PieceULeft, PlayerColor),
-
-    PlayerColor \= Opponent ->
-        up_left(Board, Board_size, XOut, YOut, XOut2, YOut2, PieceULeft2),
-        PieceULeft2 =:= '.' ->
-            append(ForcedMoves, [XIn, YIn, XOut2, YOut2]);
-        %nothing
-
+% FALTA TESTAR 
+has_forced_move(Board, Board_size, XIn, YIn, ForcedMoves) :-
+    nth0(YIn, Board, YList),
+    nth0(XIn, YList, Piece),
+    opponent_color(Piece, OpponentColor),
+    findall([XIn, YIn, XEnd, YEnd], 
+        (   
+            is_capture_possible(Board, Board_size, XIn, YIn, -1, 1, OpponentColor, XEnd, YEnd);
+            is_capture_possible(Board, Board_size, XIn, YIn, 1, 1, OpponentColor, XEnd, YEnd);
+            is_capture_possible(Board, Board_size, XIn, YIn, -1, -1, OpponentColor, XEnd, YEnd);
+            is_capture_possible(Board, Board_size, XIn, YIn, 1, -1, OpponentColor, XEnd, YEnd)
+        ), 
+        ForcedMoves).
 
 test :-
-    Board_size = 4,
+    Board_size = 8,
     Player_rows is (Board_size-2) // 2,
     generateBoard(Board, Board_size),
     fill_board(Board, Player_rows, 0, FinalBoard),
