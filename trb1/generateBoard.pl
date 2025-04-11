@@ -207,23 +207,25 @@ is_pos_empty(Board, X, Y) :-
     nth0(X, YList, Pos),
     Pos == '.'.
 
-is_legal_move(Board, '○', XIn, YIn, TargetX, TargetY) :-
-    is_pos_empty(Board, TargetX, TargetY),
-    XT is abs(XIn - TargetX),
-    YT is YIn - TargetY,
-    YT =:= -1, 
-    XT =:= 1.
-
-is_legal_move(Board, '●', XIn, YIn, TargetX, TargetY) :-
+%SEM RAINHAS
+is_legal_move(Board, PieceType, XIn, YIn, TargetX, TargetY) :-
+    PieceType =:= '○' ->
+        is_pos_empty(Board, TargetX, TargetY),
+        XT is abs(XIn - TargetX),
+        YT is YIn - TargetY,
+        YT =:= -1, 
+        XT =:= 1;
     is_pos_empty(Board, TargetX, TargetY),
     XT is abs(XIn - TargetX),
     YT is YIn - TargetY,
     YT =:= 1, 
     XT =:= 1.
-
+    
+/*
 is_legal_move(Board, _, XIn, YIn, TargetX, TargetY) :-
     % caso rainhas que é indiferente
-    write("NOT YET IMPLEMENTED")
+    write("NOT YET IMPLEMENTED").
+*/
 
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
     write("NOT YET IMPLEMENTED").
