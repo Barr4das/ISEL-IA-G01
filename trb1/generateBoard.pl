@@ -216,12 +216,12 @@ is_legal_move(Board, PieceType, XIn, YIn, TargetX, TargetY) :-
         is_pos_empty(Board, TargetX, TargetY),
         XT is abs(XIn - TargetX),
         YT is YIn - TargetY,
-        YT =:= -1, 
+        YT =:= 1, 
         XT =:= 1;
     is_pos_empty(Board, TargetX, TargetY),
     XT is abs(XIn - TargetX),
     YT is YIn - TargetY,
-    YT =:= 1, 
+    YT =:= -1, 
     XT =:= 1.
     
 /*
@@ -230,42 +230,44 @@ is_legal_move(Board, _, XIn, YIn, TargetX, TargetY) :-
     write("NOT YET IMPLEMENTED").
 */
 
-play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
-    write("NOT YET IMPLEMENTED").
-
-play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 1) :-
-    write("GAME IS OVER").
-
-play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 1) :-
-    write("GAME IS OVER").
-
-% ERRO AQUI
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
-    LastX =:= Board_size ->
+    (LastX =:= Board_size ->
         player_number(PlayerSymbol, PlayerNumber),
-        read_input(PlayerNumber, X1, Y1, X2, Y2),
-        % Check coords
-        write("ALO "),
-        \+ valid_coordinate(Board_size, X1, Y1); \+ valid_coordinate(Board_size, X2, Y2) ->
+        (read_input(PlayerNumber, X1, Y1, X2, Y2) ->
+            true
+        ;
+            play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+        ),
+
+        % Verifica coordenadas
+        (
+            \+ valid_coordinate(Board_size, X1, Y1); 
+            \+ valid_coordinate(Board_size, X2, Y2)
+        ->
             write("Invalid input. Try again..."), nl, nl,
             sleep(2),
             write("Deleting System32..."), nl,
             sleep(2),
-            play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0);
-        write("WHY "),
-        piece_color(PlayerSymbol, Color),
-        player_forced_moves(Board, Board_size, Color, PlayerForcedMoves);
-            /*
+            play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+        ;
+            % Jogada válida
+            trace,
+            piece_color(PlayerSymbol, Color),
+            player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
+            (
                 PlayerForcedMoves \= [] ->
-                        write("Forced moves available, check logic here..."), nl;
+                    write("Forced moves available, check logic here..."), nl
+                ;
                     nth0(Y1, Board, YList),
                     nth0(X1, YList, PosSymbol),
                     is_legal_move(Board, PosSymbol, X1, Y1, X2, Y2),
                     move(PosSymbol, X1, Y1, X2, Y2, Board, AfterMoveBoard),
                     opponent_symbol(PlayerSymbol, OpponentSymbol),
+                    print_checkers(AfterMoveBoard, Board_size),
                     play(AfterMoveBoard, Board_size, OpponentSymbol, Board_size, Board_size, 0, 0)
-            */
-    write("ACABOU ").
+            )
+        )
+    ).
 
 checkers(Board_size) :-
     write("Welcome to the Checkers Prolog game!"), nl,
