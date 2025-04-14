@@ -150,7 +150,8 @@ read_input(PlayerNumber, X1, Y1, X2, Y2) :-
 
 valid_coordinate(Board_size, X, Y) :-
     X >= 0, Y >= 0,
-    X < Board_size, Y < Board_size.
+    X < Board_size, 
+    Y < Board_size; !.
 
 is_capture_possible(Board, Board_size, XIn, YIn,  XTranslation, YTranslation, OpponentColor, XEnd, YEnd) :-
     X1 is XIn + XTranslation,
@@ -209,7 +210,8 @@ is_pos_empty(Board, X, Y) :-
 
 %SEM RAINHAS
 is_legal_move(Board, PieceType, XIn, YIn, TargetX, TargetY) :-
-    PieceType =:= '\u25cb' ->
+    Aux = '\u25cb',
+    PieceType == Aux ->
         is_pos_empty(Board, TargetX, TargetY),
         XT is abs(XIn - TargetX),
         YT is YIn - TargetY,
