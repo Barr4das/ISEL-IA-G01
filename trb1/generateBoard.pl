@@ -209,7 +209,7 @@ is_pos_empty(Board, X, Y) :-
 
 %SEM RAINHAS
 is_legal_move(Board, PieceType, XIn, YIn, TargetX, TargetY) :-
-    PieceType =:= '○' ->
+    PieceType =:= '\u25cb' ->
         is_pos_empty(Board, TargetX, TargetY),
         XT is abs(XIn - TargetX),
         YT is YIn - TargetY,
