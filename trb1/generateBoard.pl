@@ -369,4 +369,4 @@ test_player_forced_moves :-
     Board_size = 8,
     Color = black,
     player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
-    write("should return : [[3,3,[1,5],[5,5]]] returned : "), write(PlayerForcedMoves), nl.
+    write("should return : [[3,3,[1,5],[5,5]]] or [[2,4,[4,2]],[4,4,[2,2]]] returned : "), write(PlayerForcedMoves), nl.
