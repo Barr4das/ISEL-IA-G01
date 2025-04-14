@@ -17,7 +17,7 @@ opponent_color('♛', white).
 opponent_color('.', none).
 
 opponent_symbol('○', '●').
-opponent_symbol('○', '●').
+opponent_symbol('●', '○').
 
 player_number('○', 1).
 player_number('●', 2).
@@ -251,11 +251,10 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
             play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
         ;
             % Jogada válida
-            trace,
             piece_color(PlayerSymbol, Color),
             player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
             (
-                PlayerForcedMoves \= [] ->
+                PlayerForcedMoves \== [] ->
                     write("Forced moves available, check logic here..."), nl
                 ;
                     nth0(Y1, Board, YList),
