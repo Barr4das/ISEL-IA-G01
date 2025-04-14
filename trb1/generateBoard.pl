@@ -209,7 +209,8 @@ is_pos_empty(Board, X, Y) :-
 
 %SEM RAINHAS
 is_legal_move(Board, PieceType, XIn, YIn, TargetX, TargetY) :-
-    PieceType =:= '\u25cb' ->
+    Aux = '\u25cb',
+    PieceType == Aux ->
         is_pos_empty(Board, TargetX, TargetY),
         XT is abs(XIn - TargetX),
         YT is YIn - TargetY,
@@ -242,8 +243,10 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
         player_number(PlayerSymbol, PlayerNumber),
         read_input(PlayerNumber, X1, Y1, X2, Y2),
         (
-            \+ valid_coordinate(Board_size, X1, Y1); 
-            \+ valid_coordinate(Board_size, X2, Y2)
+            (
+                \+ valid_coordinate(Board_size, X1, Y1); 
+                \+ valid_coordinate(Board_size, X2, Y2)
+            )
         ->
             write("Invalid input. Try again..."), nl, nl,
             sleep(2),
