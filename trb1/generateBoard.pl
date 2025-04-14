@@ -252,8 +252,9 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
         ;
             % Jogada válida
             piece_color(PlayerSymbol, Color),
+            write(Color),
             player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
-            trace,
+            write(PlayerForcedMoves), nl, nl, nl,
             (
                 PlayerForcedMoves \= [] ->
                     write("Forced moves available, check logic here..."), nl
@@ -362,13 +363,45 @@ test_player_forced_moves :-
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
-        ['.', '.', '.', '○', '.', '.', '.', '.'],  
-        ['.', '.', '●', '.', '●', '.', '.', '.'],  
+        ['.', '.', '.', '●', '.', '.', '.', '.'],  
+        ['.', '.', '○', '.', '○', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.'], 
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.']   
     ],
     Board_size = 8,
-    Color = black,
+    Color = white,
     player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
     write("should return : [[3,3,[1,5],[5,5]]] or [[2,4,[4,2]],[4,4,[2,2]]] returned : "), write(PlayerForcedMoves), nl.
+
+test_player_forced_moves_case1 :-
+    Board = [
+        ['●', '.', '●', '.', '●', '.', '●', '.'],  
+        ['.', '●', '.', '●', '.', '●', '.', '●'],  
+        ['.', '.', '●', '.', '●', '.', '●', '.'],  
+        ['.', '●', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '○', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '○', '.', '○', '.', '○'], 
+        ['○', '.', '○', '.', '○', '.', '○', '.'],  
+        ['.', '○', '.', '○', '.', '○', '.', '○']   
+    ],
+    Board_size = 8,
+    Color = white,
+    player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
+    write(PlayerForcedMoves), nl.
+
+test_player_forced_moves_case2 :-
+    Board = [
+        ['●', '.', '●', '.', '●', '.', '●', '.'],  
+        ['.', '●', '.', '●', '.', '●', '.', '●'],  
+        ['.', '.', '●', '.', '●', '.', '●', '.'],  
+        ['.', '●', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '○', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '○', '.', '○', '.', '○'], 
+        ['○', '.', '○', '.', '○', '.', '○', '.'],  
+        ['.', '○', '.', '○', '.', '○', '.', '○']   
+    ],
+    Board_size = 8,
+    Color = black,
+    player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
+    write(PlayerForcedMoves), nl.
