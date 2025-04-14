@@ -253,8 +253,9 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
             % Jogada válida
             piece_color(PlayerSymbol, Color),
             player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
+            trace,
             (
-                PlayerForcedMoves \== [] ->
+                PlayerForcedMoves \= [] ->
                     write("Forced moves available, check logic here..."), nl
                 ;
                     nth0(Y1, Board, YList),
@@ -311,7 +312,7 @@ test_forced_moves :-
     XIn = 3, YIn = 3,  % Coordenadas da peça branca '○'
     has_forced_move(Board, Board_size, XIn, YIn, ForcedMoves),
     %[ X, Y | FMoves]
-    write("should return : [1,5], [5,5] returned : "), write(ForcedMoves), nl,
+    write("should return : [3,3,[1,5],[5,5]] returned : "), write(ForcedMoves), nl,
     Board2 = [
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
@@ -323,7 +324,7 @@ test_forced_moves :-
         ['.', '.', '.', '.', '.', '.', '.', '.']   
     ],
     has_forced_move(Board2, Board_size, XIn, YIn, ForcedMoves2),
-    write("should return : [1,5], [5,5], [1,1], [5,1] returned : "), write(ForcedMoves2), nl,
+    write("should return : [3,3,[1,5],[5,5],[1,1],[5,1]] returned : "), write(ForcedMoves2), nl,
     Board3 = [
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
@@ -335,7 +336,7 @@ test_forced_moves :-
         ['.', '.', '.', '.', '.', '.', '.', '.']   
     ],
     has_forced_move(Board3, Board_size, XIn, YIn, ForcedMoves3),
-    write("should return : [] returned : "), write(ForcedMoves3), nl,
+    write("should return : [3,3] returned : "), write(ForcedMoves3), nl,
     Board4 = [
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
@@ -350,11 +351,11 @@ test_forced_moves :-
     XIn1 = 2, YIn1 = 4,  % Coordenadas da peça preta '●'
     has_forced_move(Board4, Board_size, XIn1, YIn1, ForcedMoves4),
     %[ X, Y | FMoves]
-    write("should return : [4, 2] returned : "), write(ForcedMoves4), nl,
+    write("should return : [2,4,[4,2]] returned : "), write(ForcedMoves4), nl,
     XIn2 = 4, YIn2 = 4,  % Coordenadas da peça preta '●'
     has_forced_move(Board4, Board_size, XIn2, YIn2, ForcedMoves5),
     %[ X, Y | FMoves]
-    write("should return : [2, 2] returned : "), write(ForcedMoves5), nl.
+    write("should return : [4,4,[2,2]] returned : "), write(ForcedMoves5), nl.
 
 test_player_forced_moves :-
     Board = [
