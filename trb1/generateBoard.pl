@@ -88,13 +88,13 @@ fill_board([], _, _, []).
 fill_board([HI | TI], Player_rows, Idx, [HO | TO]) :-
     Idx < Player_rows, !,
     New_idx is Idx + 1,
-    process_row(HI, '\u25cb', Idx, HO),
+    process_row(HI, '\u25cf', Idx, HO),
     fill_board(TI, Player_rows, New_idx, TO).
 
 fill_board([HI | TI], Player_rows, Idx, [HO | TO]) :-
     Idx >= Player_rows + 2, !,
     New_idx is Idx + 1,
-    process_row(HI, '\u25cf', Idx, HO),
+    process_row(HI, '\u25cb', Idx, HO),
     fill_board(TI, Player_rows, New_idx, TO).
 
 fill_board([HI | TI], Player_rows, Idx, [HI | TO]) :-
@@ -102,7 +102,7 @@ fill_board([HI | TI], Player_rows, Idx, [HI | TO]) :-
     fill_board(TI, Player_rows, New_idx, TO).
 
 process_row(Row, Piece, Idx, Result) :-
-    (   1 =:= Idx mod 2 
+    ( 1 =:= Idx mod 2 
     ->  reverse(Row, RevRow),
         add_pieces(Piece, RevRow, RevResult),
         reverse(RevResult, Result)
@@ -114,7 +114,7 @@ replace_nth0(List, Index, OldElem, NewElem, NewList) :-
    nth0(Index,NewList,NewElem,Transfer).
 
 % only does the movement (no logic envolved)
-play(PlayerSymbol, XStart, YStart, XFinish, YFinish, BoardIn, BoardOut) :-
+move(PlayerSymbol, XStart, YStart, XFinish, YFinish, BoardIn, BoardOut) :-
     nth0(YStart, BoardIn, YList),
     replace_nth0(YList, XStart, PlayerSymbol, '.', NewYList),
     replace_nth0(BoardIn, YStart, YList, NewYList, BoardOutTemp),
@@ -181,18 +181,6 @@ has_forced_move(Board, Board_size, XIn, YIn, ForcedMoves) :-
         ForcedMovesList),
     append([XIn, YIn], ForcedMovesList, ForcedMoves).
 
-/*
-piece_forced_moves(Board, Board_size, Color, X, Y, PlayerForcedMoves) :-
-    nth0(Y, Board, YList),
-    nth0(X, YList, Pos),
-    Pos \= '.' ->
-        piece_color(Pos, Color), 
-        has_forced_move(Board, Board_size, X, Y, PieceForcedMoves),  
-        append(PieceForcedMoves, PlayerForcedMoves, PlayerForcedMoves);
-    true.  
-*/  
-
-%TEST
 player_forced_moves(Board, Board_size, Color, PlayerForcedMoves) :-
     MaxIdx is Board_size-1,
     findall(Move,
@@ -207,6 +195,7 @@ player_forced_moves(Board, Board_size, Color, PlayerForcedMoves) :-
         ),
         Moves),
     append(Moves, [], PlayerForcedMoves).
+
 print_move(X1, Y1, X2, Y2) :-
     letters(L),
     nth0(Y1, L, Y1L),
@@ -303,7 +292,7 @@ test :-
     %print_item(XOut), print_item(YOut), print_item(PieceSymbol), nl.
     print_item(Y1), print_item(X1), nl,
     print_item(Y2), print_item(X2), nl,
-    play('\u25cf', X1, Y1, X2, Y2, FinalBoard, FinalFinalBoard),
+    move('\u25cf', X1, Y1, X2, Y2, FinalBoard, FinalFinalBoard),
     print_checkers(FinalFinalBoard, Board_size).
 
 test_forced_moves :-
@@ -380,4 +369,4 @@ test_player_forced_moves :-
     Board_size = 8,
     Color = black,
     player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
-    write("should return : [[3,3,[1,5],[5,5]]] or [[2,4,[4,2]],[4,4,[2,2]]] returned : "), write(PlayerForcedMoves), nl.
+    write("should return : [[3,3,[1,5],[5,5]]] returned : "), write(PlayerForcedMoves), nl.
