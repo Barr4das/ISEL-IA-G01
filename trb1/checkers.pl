@@ -210,8 +210,7 @@ is_pos_empty(Board, X, Y) :-
 
 %SEM RAINHAS
 is_legal_move(Board, PieceType, XIn, YIn, TargetX, TargetY) :-
-    Aux = '\u25cb',
-    PieceType == Aux ->
+    PieceType == '\u25cb' ->
         is_pos_empty(Board, TargetX, TargetY),
         XT is abs(XIn - TargetX),
         YT is YIn - TargetY,
@@ -222,6 +221,27 @@ is_legal_move(Board, PieceType, XIn, YIn, TargetX, TargetY) :-
     YT is YIn - TargetY,
     YT =:= -1, 
     XT =:= 1.
+
+forced_moves_contains(_,_, []) :- fail.
+
+forced_moves_contains(X,Y, [XL, YL | T]) :-
+    X =:= XL, Y =:= YL ->
+        true;
+    forced_moves_contains(X,Y,T).
+
+
+is_move_forced_valid(_, _, _, _, []) :- fail.
+
+is_move_forced_valid(X1, Y1, X2, Y2, [[ForcedX, ForcedY, ForcedMovesList] | Tail]) :-
+    %write("Input 1: "), write(X1), write(","), write(Y1), nl,
+    %write("Input 2: "), write(X2), write(","), write(Y2), nl,
+    %write("Checking against: "), write(ForcedX), write(","), write(ForcedY), nl,
+    trace,
+    (
+        X1 =:= ForcedX, Y1 =:= ForcedY ->
+            forced_moves_contains(X2, Y2, ForcedMovesList);
+        is_move_forced_valid(X1, Y1, X2, Y2, Tail)
+    ).
 
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
     (LastX =:= Board_size ->
@@ -247,12 +267,16 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
             % Jogada válida
             piece_color(PlayerSymbol, Color),
             player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
-            write("Piece color: "), write(Color), nl,
-            write("PlayerSymbol: "), write(PlayerSymbol), nl,
-            write("PlayerForcedMoves: "), write(PlayerForcedMoves), nl,
             (
                 PlayerForcedMoves \= [] ->
-                    write("Forced moves available, check logic here..."), nl
+                    (
+                        is_move_forced_valid(X1, Y1, X2, Y2, PlayerForcedMoves) ->
+                            % Executar jogada forçada
+                            write("Forced move played!"), nl
+                        ;
+                            write("Not a valid forced move!"), nl,
+                            play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+                    )
                 ;
                     nth0(Y1, Board, YList),
                     nth0(X1, YList, PosSymbol),
@@ -279,7 +303,7 @@ checkers(Board_size) :-
     print_checkers(FilledBoard, Board_size),
     play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 0, 0).
 
-test :-
+test3 :-
     Board = [
         ['\u25CF', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.'],  
         ['.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF'],  
@@ -293,19 +317,5 @@ test :-
     Board_size = 8,
     Color = white,
     player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
-    write(PlayerForcedMoves), nl.
-
-test2 :-
-    Board = [
-        ['\u25CF', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.'],  
-        ['.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF'],  
-        ['.', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.'],  
-        ['.', '\u25CF', '.', '.', '.', '.', '.', '.'],  
-        ['.', '.', '\u25CB', '.', '.', '.', '.', '.'],  
-        ['.', '.', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB'], 
-        ['\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
-        ['.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB']   
-    ],
-    Board_size = 8,
-    has_forced_move(Board, Board_size, 2, 4, PlayerForcedMoves),
-    write(PlayerForcedMoves), nl.
+    write(PlayerForcedMoves), nl,
+    is_move_forced_valid(2,4,0,2, PlayerForcedMoves).
