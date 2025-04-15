@@ -4,25 +4,24 @@ letters(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']).
 is_queen('♕').
 is_queen('♛').
 
-piece_color('○', white).
-piece_color('●', black).
-piece_color('♕', white).
-piece_color('♛', black).
+piece_color('\u25CB', white).
+piece_color('\u25CF', black).
+piece_color('\u2655', white).
+piece_color('\u265B', black).
 piece_color('.', none).
 
-opponent_color('○', black).
-opponent_color('●', white).
-opponent_color('♕', black).
-opponent_color('♛', white).
+opponent_color('\u25CB', black).
+opponent_color('\u25CF', white).
+opponent_color('\u2655', black).
+opponent_color('\u265B', white).
 opponent_color('.', none).
 
-opponent_symbol('○', '●').
-opponent_symbol('●', '○').
-opponent_symbol('\u25CB', '\u25CF').
-opponent_symbol('\u25CF', '\u25CB').
 
-player_number('○', 1).
-player_number('●', 2).
+opponent_symbol('\u25cb', '\u25cf').
+opponent_symbol('\u25cf', '\u25cb').
+
+player_number('\u25cb', 1).
+player_number('\u25cf', 2).
 
 first([], []).
 first(X, [X|_]).
@@ -228,6 +227,7 @@ is_legal_move(Board, PieceType, XIn, YIn, TargetX, TargetY) :-
 
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
     (LastX =:= Board_size ->
+        %trace,
         player_number(PlayerSymbol, PlayerNumber),
         (read_input(PlayerNumber, X1, Y1, X2, Y2) ->
             true
@@ -248,9 +248,10 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
         ;
             % Jogada válida
             piece_color(PlayerSymbol, Color),
-            write(Color),
             player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
-            write(PlayerForcedMoves), nl, nl, nl,
+            write("Piece color: "), write(Color), nl,
+            write("PlayerSymbol: "), write(PlayerSymbol), nl,
+            write("PlayerForcedMoves: "), write(PlayerForcedMoves), nl,
             (
                 PlayerForcedMoves \= [] ->
                     write("Forced moves available, check logic here..."), nl
@@ -278,4 +279,4 @@ checkers(Board_size) :-
 
     %player action
     print_checkers(FilledBoard, Board_size),
-    play(FilledBoard, Board_size, '○', Board_size, Board_size, 0, 0).
+    play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 0, 0).
