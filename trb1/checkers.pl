@@ -16,7 +16,6 @@ opponent_color('\u2655', black).
 opponent_color('\u265B', white).
 opponent_color('.', none).
 
-
 opponent_symbol('\u25cb', '\u25cf').
 opponent_symbol('\u25cf', '\u25cb').
 
@@ -147,8 +146,6 @@ read_input(PlayerNumber, X1, Y1, X2, Y2) :-
     nth0(X1, Letters, XIn1),
     nth0(X2, Letters, XIn2).
 
-% has_forced_move(Board, Board_size, PlayerPiece, XIn, YIn, ForcedMoves) :-
-
 valid_coordinate(Board_size, X, Y) :-
     X >= 0,
     Y >= 0,
@@ -194,7 +191,8 @@ player_forced_moves(Board, Board_size, Color, PlayerForcedMoves) :-
             nth0(X, Row, Piece),
             Piece \= '.',
             piece_color(Piece, Color),
-            has_forced_move(Board, Board_size, X, Y, Move)
+            has_forced_move(Board, Board_size, X, Y, Move),
+            Move \= [X, Y]
         ),
         Moves),
     append(Moves, [], PlayerForcedMoves).
@@ -280,3 +278,34 @@ checkers(Board_size) :-
     %player action
     print_checkers(FilledBoard, Board_size),
     play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 0, 0).
+
+test :-
+    Board = [
+        ['\u25CF', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.'],  
+        ['.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF'],  
+        ['.', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.'],  
+        ['.', '\u25CF', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '\u25CB', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB'], 
+        ['\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
+        ['.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB']   
+    ],
+    Board_size = 8,
+    Color = white,
+    player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
+    write(PlayerForcedMoves), nl.
+
+test2 :-
+    Board = [
+        ['\u25CF', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.'],  
+        ['.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF'],  
+        ['.', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.'],  
+        ['.', '\u25CF', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '\u25CB', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB'], 
+        ['\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
+        ['.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB']   
+    ],
+    Board_size = 8,
+    has_forced_move(Board, Board_size, 2, 4, PlayerForcedMoves),
+    write(PlayerForcedMoves), nl.
