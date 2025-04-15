@@ -233,15 +233,19 @@ forced_moves_contains(X,Y, [XL, YL | T]) :-
 is_move_forced_valid(_, _, _, _, []) :- fail.
 
 is_move_forced_valid(X1, Y1, X2, Y2, [[ForcedX, ForcedY, ForcedMovesList] | Tail]) :-
-    %write("Input 1: "), write(X1), write(","), write(Y1), nl,
-    %write("Input 2: "), write(X2), write(","), write(Y2), nl,
-    %write("Checking against: "), write(ForcedX), write(","), write(ForcedY), nl,
-    trace,
     (
         X1 =:= ForcedX, Y1 =:= ForcedY ->
             forced_moves_contains(X2, Y2, ForcedMovesList);
         is_move_forced_valid(X1, Y1, X2, Y2, Tail)
     ).
+remove_piece(Board, X, Y, BoardOut) :-
+    nth0(Y, Board, YList),
+    nth0(X, YList, Item),  % pegar o elemento antigo
+    replace_nth0(YList, X, Item, '.', NewYList),
+    replace_nth0(Board, Y, YList, NewYList, BoardOut).
+
+capture(Board,X1,Y1,X2,Y2,BoardOut) :-
+    write("TODO").
 
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
     (LastX =:= Board_size ->
@@ -271,13 +275,24 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
                 PlayerForcedMoves \= [] ->
                     (
                         is_move_forced_valid(X1, Y1, X2, Y2, PlayerForcedMoves) ->
-                            % Executar jogada forçada
-                            write("Forced move played!"), nl
+
+                            XDiff is (X2 - X1)/2 + X1,
+                            YDiff is (Y2 - Y1)/2 + Y1,
+
+                            %write(XDiff), write(YDiff),nl,
+                            remove_piece(Board, XDiff, YDiff, NewBoard),
+                            nth0(Y1, Board, YList),
+                            nth0(X1, YList, PosSymbol),
+                            move(PosSymbol, X1, Y1, X2, Y2, NewBoard, AfterMoveBoard),
+                            print_checkers(AfterMoveBoard, Board_size),
+                            opponent_symbol(PlayerSymbol, Opp),
+                            play(AfterMoveBoard, Board_size, Opp, LastX, LastY, 0, 0)
                         ;
-                            write("Not a valid forced move!"), nl,
+                            write("Invalid move. Try Again"), nl,
                             play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
                     )
                 ;
+                    % Adicionar verificação de player
                     nth0(Y1, Board, YList),
                     nth0(X1, YList, PosSymbol),
                     is_legal_move(Board, PosSymbol, X1, Y1, X2, Y2),
@@ -305,10 +320,10 @@ checkers(Board_size) :-
 
 test3 :-
     Board = [
-        ['\u25CF', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.'],  
-        ['.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF'],  
-        ['.', '.', '\u25CF', '.', '\u25CF', '.', '\u25CF', '.'],  
-        ['.', '\u25CF', '.', '.', '.', '.', '.', '.'],  
+        ['\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.'],  
+        ['.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf'],  
+        ['.', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.'],  
+        ['.', '\u25cf', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '\u25CB', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB'], 
         ['\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
