@@ -198,7 +198,7 @@ player_forced_moves(Board, Board_size, Color, PlayerForcedMoves) :-
             Piece \= '.',
             piece_color(Piece, Color),
             has_forced_move(Board, Board_size, X, Y, Move),
-            Move \= [X, Y]
+            Move \= []
         ),
         Moves),
     append(Moves, [], PlayerForcedMoves).
