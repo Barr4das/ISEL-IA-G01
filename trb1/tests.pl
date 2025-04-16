@@ -59,3 +59,36 @@ test4 :-
     ],
     Board_size = 8,
     play(Board, Board_size, '\u25cb', Board_size, Board_size, 0, 0).
+
+
+test5 :-
+    Board = [
+        ['\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.'],  
+        ['.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf'],  
+        ['\u25cf', '.', '.', '.', '\u25cf', '.', '.', '.'],  
+        ['.', '\u25cf', '.', '.', '.', '\u25cf', '.', '.'],  
+        ['.', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '\u25CB'], 
+        ['\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
+        ['.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB']   
+    ],
+    Board_size = 8,
+    play(Board, Board_size, '\u25cf', Board_size, Board_size, 0, 0).
+    %has_forced_move(Board, Board_size, 5, 3, ComboForcedMove),
+    %write("ComboForcedMove: "), write(ComboForcedMove), nl.
+
+test6 :-
+    Board = [
+        ['\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.'],  
+        ['.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf'],  
+        ['\u25cf', '.', '.', '.', '\u25cf', '.', '.', '.'],  
+        ['.', '\u25cf', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '\u25CB', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '\u25cf', '.', '.', '.', '\u25CB'], 
+        ['\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
+        ['.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB']   
+    ],
+    Board_size = 8,
+    %play(Board, Board_size, '\u25cf', Board_size, Board_size, 0, 0).
+    has_forced_move(Board, Board_size, 3, 5, ComboForcedMove),
+    write("ComboForcedMove: "), write(ComboForcedMove), nl.

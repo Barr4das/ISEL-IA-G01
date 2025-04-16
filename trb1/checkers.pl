@@ -269,14 +269,65 @@ checkers_move(Board, X1, Y1, X2, Y2, OutputBoard) :-
     is_legal_move(Board, PosSymbol, X1, Y1, X2, Y2),
     move(PosSymbol, X1, Y1, X2, Y2, Board, OutputBoard).
 
+piece_legal_moves(Board, X, Y, PieceLegalMoves) :-
+    nth0(Y, Board, Row),
+    nth0(X, Row, Piece),
+    Piece \= '.',
+    piece_color(Piece, Color),
+    (
+        Color == white -> 
+            Directions = [(-1, -1), (1, -1)]
+        ; 
+        Color == black -> 
+            Directions = [(-1, 1), (1, 1)]
+    ),
+    findall([NewX, NewY],
+        (
+            member((DX, DY), Directions),
+            NewX is X + DX,
+            NewY is Y + DY,
+            valid_coordinate(8, NewX, NewY),
+            nth0(NewY, Board, NewRow),
+            nth0(NewX, NewRow, TargetPiece),
+            TargetPiece == '.'
+        ),
+        PieceLegalMoves
+    ).
+
+% BOARD, 8, black
+player_legal_moves(Board, Board_size, PlayerColor, LegalMoves) :-
+    player_forced_moves(Board, Board_size, PlayerColor, PlayerForcedMoves),
+    PlayerForcedMoves \= [] ->
+        (
+            write("PlayerForcedMoves: "), write(PlayerForcedMoves), nl,
+            LegalMoves = PlayerForcedMoves
+        )
+    ;
+        (
+            MaxIdx is Board_size - 1,
+            findall(
+                [X, Y, Moves],
+                (
+                    between(0, MaxIdx, X),
+                    between(0, MaxIdx, Y),
+                    nth0(Y, Board, Row),
+                    nth0(X, Row, Piece),
+                    piece_color(Piece, PlayerColor),
+                    piece_legal_moves(Board, X, Y, Moves),
+                    Moves \= []
+                ),
+                LegalMoves
+            ),
+            write("LegalMoves (no forced): "), write(LegalMoves), nl
+        ).
+
+
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
 
-    %notrace,
     % console prints
     print_checkers(Board, Board_size),
     player_number(PlayerSymbol, PlayerNumber),
 
-    %trace,
     % read inputs
     (
         read_input(PlayerNumber, X1, Y1, X2, Y2) -> 
@@ -303,8 +354,6 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
         (
             LastX =:= 8 ->
 
-            trace,
-
             % verify forced moves
             piece_color(PlayerSymbol, Color),
             player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
@@ -324,7 +373,6 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
                     capture(Board, X1, Y1, X2, Y2, AfterMoveBoard),
 
                     % check if it's a COMBO move
-                    trace,
                     has_forced_move(AfterMoveBoard, Board_size, X2, Y2, ComboForcedMove),
                     (
                         ComboForcedMove \= [] ->
@@ -395,23 +443,7 @@ checkers(Board_size) :-
 
     play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 0, 0).
 
-test5 :-
-    Board = [
-        ['\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.'],  
-        ['.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf'],  
-        ['\u25cf', '.', '.', '.', '\u25cf', '.', '.', '.'],  
-        ['.', '\u25cf', '.', '.', '.', '\u25cf', '.', '.'],  
-        ['.', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
-        ['.', '.', '.', '.', '.', '.', '.', '\u25CB'], 
-        ['\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
-        ['.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB']   
-    ],
-    Board_size = 8,
-    play(Board, Board_size, '\u25cf', Board_size, Board_size, 0, 0).
-    %has_forced_move(Board, Board_size, 5, 3, ComboForcedMove),
-    %write("ComboForcedMove: "), write(ComboForcedMove), nl.
-
-test6 :-
+test8 :-
     Board = [
         ['\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.'],  
         ['.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf'],  
@@ -423,6 +455,14 @@ test6 :-
         ['.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB']   
     ],
     Board_size = 8,
-    %play(Board, Board_size, '\u25cf', Board_size, Board_size, 0, 0).
-    has_forced_move(Board, Board_size, 3, 5, ComboForcedMove),
-    write("ComboForcedMove: "), write(ComboForcedMove), nl.
+    print_checkers(Board, Board_size),
+    player_forced_moves(Board, Board_size, white, PlayerForcedMoves),
+    write("PlayerForcedMoves: "), write(PlayerForcedMoves), nl.
+
+test9 :-
+    Board_size = 8,
+    generateBoard(Board, Board_size),
+    Player_rows = 3,
+    fill_board(Board, Player_rows, 0, NewBoard),
+    print_checkers(NewBoard, Board_size),
+    player_legal_moves(NewBoard, Board_size, white, PlayerForcedMoves).
