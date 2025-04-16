@@ -181,7 +181,11 @@ has_forced_move(Board, Board_size, XIn, YIn, ForcedMoves) :-
             is_capture_possible(Board, Board_size, XIn, YIn,  1, -1, OpponentColor, XEnd, YEnd)
         ), 
         ForcedMovesList),
-    append([XIn, YIn], ForcedMovesList, ForcedMoves).
+    (ForcedMovesList \= [] ->
+        append([XIn, YIn], ForcedMovesList, ForcedMoves)
+    ;
+        ForcedMoves = []
+    ).
 
 player_forced_moves(Board, Board_size, Color, PlayerForcedMoves) :-
     MaxIdx is Board_size-1,
@@ -299,6 +303,8 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
         (
             LastX =:= 8 ->
 
+            trace,
+
             % verify forced moves
             piece_color(PlayerSymbol, Color),
             player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
@@ -402,3 +408,21 @@ test5 :-
     ],
     Board_size = 8,
     play(Board, Board_size, '\u25cf', Board_size, Board_size, 0, 0).
+    %has_forced_move(Board, Board_size, 5, 3, ComboForcedMove),
+    %write("ComboForcedMove: "), write(ComboForcedMove), nl.
+
+test6 :-
+    Board = [
+        ['\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.'],  
+        ['.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf'],  
+        ['\u25cf', '.', '.', '.', '\u25cf', '.', '.', '.'],  
+        ['.', '\u25cf', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '\u25CB', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '\u25cf', '.', '.', '.', '\u25CB'], 
+        ['\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
+        ['.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB']   
+    ],
+    Board_size = 8,
+    %play(Board, Board_size, '\u25cf', Board_size, Board_size, 0, 0).
+    has_forced_move(Board, Board_size, 3, 5, ComboForcedMove),
+    write("ComboForcedMove: "), write(ComboForcedMove), nl.
