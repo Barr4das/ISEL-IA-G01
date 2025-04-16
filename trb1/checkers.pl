@@ -294,7 +294,6 @@ piece_legal_moves(Board, X, Y, PieceLegalMoves) :-
         PieceLegalMoves
     ).
 
-% BOARD, 8, black
 player_legal_moves(Board, Board_size, PlayerColor, LegalMoves) :-
     player_forced_moves(Board, Board_size, PlayerColor, PlayerForcedMoves),
     PlayerForcedMoves \= [] ->
@@ -317,8 +316,8 @@ player_legal_moves(Board, Board_size, PlayerColor, LegalMoves) :-
                     Moves \= []
                 ),
                 LegalMoves
-            ),
-            write("LegalMoves (no forced): "), write(LegalMoves), nl
+            )
+            %write("LegalMoves (no forced): "), write(LegalMoves), nl
         ).
 
 
@@ -443,26 +442,29 @@ checkers(Board_size) :-
 
     play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 0, 0).
 
-test8 :-
-    Board = [
-        ['\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.'],  
-        ['.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf'],  
-        ['\u25cf', '.', '.', '.', '\u25cf', '.', '.', '.'],  
-        ['.', '\u25cf', '.', '.', '.', '.', '.', '.'],  
-        ['.', '.', '\u25CB', '.', '.', '.', '.', '.'],  
-        ['.', '.', '.', '\u25cf', '.', '.', '.', '\u25CB'], 
-        ['\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
-        ['.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB']   
-    ],
-    Board_size = 8,
-    print_checkers(Board, Board_size),
-    player_forced_moves(Board, Board_size, white, PlayerForcedMoves),
-    write("PlayerForcedMoves: "), write(PlayerForcedMoves), nl.
+% BOARD, 8, BLACK, 3, BestMove
 
-test9 :-
+minimax(Board, Board_size, Player, ViewRange, Val) :-
+    player_legal_moves(Board, Board_size, Player, LegalMoves),
+    write("LegalMoves: "), write(LegalMoves), nl.
+    % [move, valor]
+    % iteração sobre todas as jogadas possíveis
+        % gerar o board para cada jogada
+        % avaliar cada uma
+        %minimax
+    
+    %staticval
+
+bot(Board, Board_size, Player, ViewRange, BestMove) :-
+    minimax(Board, Board_size, Player, ViewRange, BestMove).
+
+    % fazer iteração sobre cada jogada legal
+    %todo
+
+test8 :-
     Board_size = 8,
     generateBoard(Board, Board_size),
     Player_rows = 3,
     fill_board(Board, Player_rows, 0, NewBoard),
     print_checkers(NewBoard, Board_size),
-    player_legal_moves(NewBoard, Board_size, white, PlayerForcedMoves).
+    bot(NewBoard, Board_size, white, 3, BestMove).
