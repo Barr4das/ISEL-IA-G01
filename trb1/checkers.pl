@@ -21,6 +21,8 @@ opponent_symbol('\u25cf', '\u25cb').
 
 player_number('\u25cb', 1).
 player_number('\u25cf', 2).
+player_number('\u2655', 1).
+player_number('\u265B', 2).
 
 first([], []).
 first(X, [X|_]).
@@ -240,66 +242,137 @@ is_move_forced_valid(X1, Y1, X2, Y2, [[ForcedX, ForcedY, ForcedMovesList] | Tail
     ).
 remove_piece(Board, X, Y, BoardOut) :-
     nth0(Y, Board, YList),
-    nth0(X, YList, Item),  % pegar o elemento antigo
+    nth0(X, YList, Item),
     replace_nth0(YList, X, Item, '.', NewYList),
     replace_nth0(Board, Y, YList, NewYList, BoardOut).
 
 capture(Board,X1,Y1,X2,Y2,BoardOut) :-
-    write("TODO").
+    XDiff is (X2 - X1)/2 + X1,
+    YDiff is (Y2 - Y1)/2 + Y1,
+    remove_piece(Board, XDiff, YDiff, NewBoard),
+    nth0(Y1, Board, YList),
+    nth0(X1, YList, PosSymbol),
+    move(PosSymbol, X1, Y1, X2, Y2, NewBoard, BoardOut).
+
+is_corresponding_player(PlayerNumber, Board, X, Y) :-
+    nth0(Y, Board, YList),
+    nth0(X, YList, Item),
+    player_number(Item, PlayerNumber).
+
+checkers_move(Board, X1, Y1, X2, Y2, OutputBoard) :-
+    nth0(Y1, Board, YList),
+    nth0(X1, YList, PosSymbol),
+    is_legal_move(Board, PosSymbol, X1, Y1, X2, Y2),
+    move(PosSymbol, X1, Y1, X2, Y2, Board, OutputBoard).
 
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
-    (LastX =:= Board_size ->
-        %trace,
-        player_number(PlayerSymbol, PlayerNumber),
-        (read_input(PlayerNumber, X1, Y1, X2, Y2) ->
-            true
-        ;
-            play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
-        ),
 
-        % Verifica coordenadas
+    %notrace,
+    % console prints
+    print_checkers(Board, Board_size),
+    player_number(PlayerSymbol, PlayerNumber),
+
+    %trace,
+    % read inputs
+    (
+        read_input(PlayerNumber, X1, Y1, X2, Y2) -> 
+            true 
+        ;
+        write("Incorrect input format, try again."), nl,
+        sleep(2),
+        play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+    ),
+
+    % input validation
+    (   
         (
-            \+ valid_coordinate(Board_size, X1, Y1); 
-            \+ valid_coordinate(Board_size, X2, Y2)
-        ->
-            write("Invalid input. Try again..."), nl, nl,
-            sleep(2),
-            write("Deleting System32..."), nl,
+            \+ valid_coordinate(Board_size, X1, Y1);
+            \+ valid_coordinate(Board_size, X2, Y2);
+            \+ is_corresponding_player(PlayerNumber, Board, X1, Y1)
+        ) ->
+            write("Invalid input. Try again..."), nl,
             sleep(2),
             play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
         ;
-            % Jogada válida
+
+        % REGULAR MOVE PLAY
+        (
+            LastX =:= 8 ->
+
+            % verify forced moves
             piece_color(PlayerSymbol, Color),
             player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
+
             (
                 PlayerForcedMoves \= [] ->
-                    (
-                        is_move_forced_valid(X1, Y1, X2, Y2, PlayerForcedMoves) ->
 
-                            XDiff is (X2 - X1)/2 + X1,
-                            YDiff is (Y2 - Y1)/2 + Y1,
-
-                            %write(XDiff), write(YDiff),nl,
-                            remove_piece(Board, XDiff, YDiff, NewBoard),
-                            nth0(Y1, Board, YList),
-                            nth0(X1, YList, PosSymbol),
-                            move(PosSymbol, X1, Y1, X2, Y2, NewBoard, AfterMoveBoard),
-                            print_checkers(AfterMoveBoard, Board_size),
-                            opponent_symbol(PlayerSymbol, Opp),
-                            play(AfterMoveBoard, Board_size, Opp, LastX, LastY, 0, 0)
-                        ;
-                            write("Invalid move. Try Again"), nl,
-                            play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
-                    )
+                % check if given move is contained in forced moves list
+                (
+                    \+ is_move_forced_valid(X1, Y1, X2, Y2, PlayerForcedMoves) ->
+                        write("Invalid move! Hint: You must capture a piece when able."), nl,
+                        sleep(2),
+                        play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
                 ;
-                    % Adicionar verificação de player
-                    nth0(Y1, Board, YList),
-                    nth0(X1, YList, PosSymbol),
-                    is_legal_move(Board, PosSymbol, X1, Y1, X2, Y2),
-                    move(PosSymbol, X1, Y1, X2, Y2, Board, AfterMoveBoard),
-                    opponent_symbol(PlayerSymbol, OpponentSymbol),
-                    print_checkers(AfterMoveBoard, Board_size),
-                    play(AfterMoveBoard, Board_size, OpponentSymbol, Board_size, Board_size, 0, 0)
+
+                    % perform capture
+                    capture(Board, X1, Y1, X2, Y2, AfterMoveBoard),
+
+                    % check if it's a COMBO move
+                    trace,
+                    has_forced_move(AfterMoveBoard, Board_size, X2, Y2, ComboForcedMove),
+                    (
+                        ComboForcedMove \= [] ->
+                            play(AfterMoveBoard, Board_size, PlayerSymbol, X2, Y2, 0, 0)
+                    ;
+                        opponent_symbol(PlayerSymbol, Opp),
+                        play(AfterMoveBoard, Board_size, Opp, Board_size, Board_size, 0, 0)
+                    )
+                )
+
+                ;
+                
+                % no forced moves - proceed with regular move
+                checkers_move(Board, X1, Y1, X2, Y2, MovedBoard),
+                opponent_symbol(PlayerSymbol, Opp),
+                play(MovedBoard, Board_size, Opp, Board_size, Board_size, 0, 0)
+            )
+
+            ;
+
+            % COMBO MOVE
+
+            % valid move verification
+            (
+                % error on this condition
+                (
+                    X1 =\= LastX; 
+                    Y1 =\= LastY
+                ) ->
+                    write("Invalid input. Try again..."), nl,
+                    sleep(2),
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+                ;
+
+                % check existing forced moves
+                has_forced_move(Board, Board_size, LastX, LastY, ForcedMoveList),
+                (
+                    forced_moves_contains(X2, Y2, ForcedMoveList) ->
+                        % perform capture
+                        capture(Board, X1, Y1, X2, Y2, CapturedBoard),
+                        % check if there's another forced move
+                        has_forced_move(CapturedBoard, Board_size, X2, Y2, ComboForcedMoves),
+                        (
+                            ComboForcedMoves \= [] ->
+                                play(CapturedBoard, Board_size, PlayerSymbol, X2, Y2, 0, 0)
+                        ;
+                            opponent_symbol(PlayerSymbol, Opp),
+                            play(CapturedBoard, Board_size, Opp, Board_size, Board_size, 0, 0)
+                        )
+                ;
+                    write("Invalid move! Hint: You must capture a piece when able."), nl,
+                    sleep(2),
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+                )
             )
         )
     ).
@@ -314,23 +387,18 @@ checkers(Board_size) :-
 
     % VERIFY IF PLAYING WITH BOT
 
-    %player action
-    print_checkers(FilledBoard, Board_size),
     play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 0, 0).
 
-test3 :-
+test5 :-
     Board = [
         ['\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.'],  
         ['.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf'],  
-        ['.', '.', '\u25cf', '.', '\u25cf', '.', '\u25cf', '.'],  
-        ['.', '\u25cf', '.', '.', '.', '.', '.', '.'],  
-        ['.', '.', '\u25CB', '.', '.', '.', '.', '.'],  
-        ['.', '.', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB'], 
+        ['\u25cf', '.', '.', '.', '\u25cf', '.', '.', '.'],  
+        ['.', '\u25cf', '.', '.', '.', '\u25cf', '.', '.'],  
+        ['.', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '\u25CB'], 
         ['\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.'],  
         ['.', '\u25CB', '.', '\u25CB', '.', '\u25CB', '.', '\u25CB']   
     ],
     Board_size = 8,
-    Color = white,
-    player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
-    write(PlayerForcedMoves), nl,
-    is_move_forced_valid(2,4,0,2, PlayerForcedMoves).
+    play(Board, Board_size, '\u25cf', Board_size, Board_size, 0, 0).
