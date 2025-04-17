@@ -294,13 +294,11 @@ piece_legal_moves(Board, X, Y, PieceLegalMoves) :-
         PieceLegalMoves
     ).
 
-player_legal_moves(Board, Board_size, PlayerColor, LegalMoves) :-
+player_legal_moves(Board, Board_size, PlayerColor, LegalMoves, Forced) :-
     player_forced_moves(Board, Board_size, PlayerColor, PlayerForcedMoves),
     PlayerForcedMoves \= [] ->
-        (
-            write("PlayerForcedMoves: "), write(PlayerForcedMoves), nl,
-            LegalMoves = PlayerForcedMoves
-        )
+        LegalMoves = PlayerForcedMoves,
+        Forced = 1
     ;
         (
             MaxIdx is Board_size - 1,
@@ -312,12 +310,17 @@ player_legal_moves(Board, Board_size, PlayerColor, LegalMoves) :-
                     nth0(Y, Board, Row),
                     nth0(X, Row, Piece),
                     piece_color(Piece, PlayerColor),
-                    piece_legal_moves(Board, X, Y, Moves),
-                    Moves \= []
+                    piece_legal_moves(Board, X, Y, TempMoves),
+                    TempMoves \= [],
+                    findall(
+                        [XM, YM],
+                        member([XM, YM], TempMoves),
+                        Moves
+                    )
                 ),
                 LegalMoves
-            )
-            %write("LegalMoves (no forced): "), write(LegalMoves), nl
+            ),
+            Forced = 0
         ).
 
 
@@ -431,6 +434,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
     ).
 
 checkers(Board_size) :-
+
     write("Welcome to the Checkers Prolog game!"), nl,
 
     % base board preparation
@@ -442,18 +446,69 @@ checkers(Board_size) :-
 
     play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 0, 0).
 
-% BOARD, 8, BLACK, 3, BestMove
+chain_captures(Board, Board_size, X, Y, PlayerSymbol, [Board]) :-
+    has_forced_move(Board, Board_size, X, Y, ForcedMoves),
+    ForcedMoves == [].
+
+chain_captures(Board, Board_size, X, Y, PlayerSymbol, FinalBoards) :-
+    has_forced_move(Board, Board_size, X, Y, ForcedMoves),
+    ForcedMoves \= [],
+    findall(
+        FinalBoard,
+        (
+            member([XF, YF], ForcedMoves),
+            capture(Board, X, Y, XF, YF, TempBoard),
+            chain_captures(TempBoard, Board_size, XF, YF, PlayerSymbol, Continuations),
+            member(FinalBoard, Continuations)
+        ),
+        FinalBoards
+    ).
+
+generate_boards_from_moves(_, [], []).
+
+generate_boards_from_moves(Board, [[XI, YI, Moves] | Tail], [MovedBoards | Boards]) :-
+    findall(
+        NewBoard,
+        (
+            member([XF, YF], Moves),
+            nth0(YI, Board, YList),
+            nth0(XI, YList, PlayerSymbol),
+            move(PlayerSymbol, XI, YI, XF, YF, Board, NewBoard)
+        ),
+        MovedBoards
+    ),
+    generate_boards_from_moves(Board, Tail, Boards).
+
+generate_boards_from_moves(_, _, [], []).
+
+generate_boards_from_moves(Board, Board_size, [[XI, YI, Moves] | Tail], [AllChains | Boards]) :-
+    nth0(YI, Board, YList),
+    nth0(XI, YList, PlayerSymbol),
+    findall(
+        FinalBoard,
+        (
+            member([XF, YF], Moves),
+            capture(Board, XI, YI, XF, YF, TempBoard),
+            chain_captures(TempBoard, Board_size, XF, YF, PlayerSymbol, Continuations),
+            member(FinalBoard, Continuations)
+        ),
+        AllChains
+    ),
+    generate_boards_from_moves(Board, Board_size, Tail, Boards).
+    
 
 minimax(Board, Board_size, Player, ViewRange, Val) :-
-    player_legal_moves(Board, Board_size, Player, LegalMoves),
-    write("LegalMoves: "), write(LegalMoves), nl.
-    % [move, valor]
-    % iteração sobre todas as jogadas possíveis
-        % gerar o board para cada jogada
-        % avaliar cada uma
-        %minimax
-    
-    %staticval
+    player_legal_moves(Board, Board_size, Player, LegalMoves, Forced),
+    LegalMoves \= [] ->
+        write("o rodrigo é tão bom"), nl;
+    write("é pah... inacreditavel"), nl.
+        % [move, valor]
+        % iteração sobre todas as jogadas possíveis
+            % generate_boards_from_moves(Board, LegalMoves, )
+            % avaliar cada uma
+            %minimax
+
+        %staticval
 
 bot(Board, Board_size, Player, ViewRange, BestMove) :-
     minimax(Board, Board_size, Player, ViewRange, BestMove).
@@ -461,10 +516,84 @@ bot(Board, Board_size, Player, ViewRange, BestMove) :-
     % fazer iteração sobre cada jogada legal
     %todo
 
-test8 :-
+test10 :-
+    Board = [
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '\u25cb', '.', '\u25cb', '.', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.'],  
+        ['.', '.', '.', '\u25cb', '.', '\u25cb', '.', '.'], 
+        ['.', '.', '.', '.', '\u25cf', '.', '.', '.'],  
+        ['.', '.', '.', '.', '.', '.', '.', '.']   
+    ],
+    Board_size = 8,
+
+    player_legal_moves(Board, Board_size, black, LegalMoves, _),
+
+    adapt_moves(LegalMoves, ForcedStructured),
+
+    generate_boards_from_moves(Board, Board_size, ForcedStructured, GeneratedBoards),
+
+    forall(
+        (
+            member(BoardList, GeneratedBoards),
+            member(BoardItem, BoardList)
+        ),
+        (
+            print_checkers(BoardItem, Board_size),
+            nl
+        )
+    ).
+
+test9 :-
     Board_size = 8,
     generateBoard(Board, Board_size),
     Player_rows = 3,
     fill_board(Board, Player_rows, 0, NewBoard),
-    print_checkers(NewBoard, Board_size),
-    bot(NewBoard, Board_size, white, 3, BestMove).
+    
+    Player = white,
+
+    player_legal_moves(NewBoard, Board_size, Player, LegalMoves, Forced),
+
+    generate_boards_from_moves(NewBoard, LegalMoves, GeneratedBoards),
+
+
+    forall(
+        (
+            member(BoardList, GeneratedBoards),
+            member(BoardItem, BoardList)
+        ),
+        (
+            print_checkers(BoardItem, Board_size),
+            nl
+        )
+    ).
+
+/**
+    PlayerForcedMoves: 
+    [
+        [
+            4,
+            6,
+            [2,4],
+            [6,4]
+        ]
+    ]
+    to
+    PlayerForcedMoves: 
+    [
+        [
+            4,
+            6, 
+            [
+                [2,4],
+                [6,4]
+            ]
+        ]
+    ]
+**/
+adapt_moves([], []).
+
+adapt_moves([[XI, YI | MovesTail] | Tail], [[XI, YI, MovesTail] | TailForcedMoves]) :-
+    adapt_moves(Tail, TailForcedMoves).

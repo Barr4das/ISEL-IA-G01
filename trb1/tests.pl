@@ -52,7 +52,7 @@ test4 :-
         ['.', '\u25cf', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
         ['.', '\u25cf', '.', '.', '.', '.', '.', '.'],  
-        ['.', '.', '\u25CB', '.', '.', '.', '.', '.'],  
+        ['.', '.', '\u25cb', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.'], 
         ['.', '.', '.', '.', '.', '.', '.', '.'],  
         ['.', '.', '.', '.', '.', '.', '.', '.']   
@@ -109,3 +109,34 @@ test7 :-
     player_forced_moves(Board, Board_size, white, PlayerForcedMoves),
     write("PlayerForcedMoves: "), write(PlayerForcedMoves), nl.
 
+test8 :-
+    Board_size = 8,
+    generateBoard(Board, Board_size),
+    Player_rows = 3,
+    fill_board(Board, Player_rows, 0, NewBoard),
+    print_checkers(NewBoard, Board_size),
+    bot(NewBoard, Board_size, white, 3, BestMove).
+
+test9 :-
+    Board_size = 8,
+    generateBoard(Board, Board_size),
+    Player_rows = 3,
+    fill_board(Board, Player_rows, 0, NewBoard),
+    
+    Player = white,
+
+    player_legal_moves(NewBoard, Board_size, Player, LegalMoves, Forced),
+
+    generate_boards_from_moves(NewBoard, LegalMoves, Forced, GeneratedBoards),
+
+
+    forall(
+        (
+            member(BoardList, GeneratedBoards),
+            member(BoardItem, BoardList)
+        ),
+        (
+            print_checkers(BoardItem, Board_size),
+            nl
+        )
+    ).
