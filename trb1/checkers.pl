@@ -2,20 +2,38 @@
 :- use_module('tests').
 :- use_module('board_print').
 
+/*
+ * generate_empty_board(-Board:List<List<Char>>,+N:UInt)
+ * Creates a board, of given size N, with '.' in all positions (representing an empty space)
+ * Example:
+    generate_empty_board(Board, 2).
+    Board = [ ['.', '.'], ['.', '.'] ].
+*/
 generate_empty_board(Board, N) :-
     length(Board, N), 
     length(Row, N),
     maplist(=('.'), Row),
     maplist(=(Row), Board).
 
-add_pieces_even(PlayerSymbol, [_, H | T], [PlayerSymbol, H | T]).
+/*
+ * add_intervaled_pieces(+PieceSymbol:Any,+[Any, Any | Any], -[Any, Any | Any])
+ * Auxiliary function to add_pieces witch substitutes the empty odd spaces ('.') in w/ given PieceSymbol.
+ * Example:
+    add_intervaled_pieces('T', ['.', '.', '.', '.'], Row).
+    Row = ['T', '.', '.', '.'].
+*/
+add_intervaled_pieces(_, [_], _).
+add_intervaled_pieces(PieceSymbol, [_, H | T], [PieceSymbol, H | T]).
 
+/*
+ *
+*/
 add_pieces(_, [], _).
 add_pieces(_, [_], [_]).
 
-add_pieces(PlayerSymbol, [HI, HI2 | TI], [HO, HI2 | Rest]) :-
-    add_pieces_even(PlayerSymbol, [HI, HI2 | TI], [HO, HI2 | _]),
-    add_pieces(PlayerSymbol, TI, Rest).
+add_pieces(PieceSymbol, [HI, HI2 | TI], [HO, HI2 | Rest]) :-
+    add_intervaled_pieces(PieceSymbol, [HI, HI2 | TI], [HO, HI2 | _]),
+    add_pieces(PieceSymbol, TI, Rest).
 
 fill_board([], _, _, []).
 

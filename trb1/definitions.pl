@@ -1,4 +1,8 @@
 
+/*
+ * BASE SYMBOL AND COLOR LOGIC DEFINITIONS FOR CHECKERS
+*/
+
 :- module(definitions, [
     letters/1,
     is_queen/1,

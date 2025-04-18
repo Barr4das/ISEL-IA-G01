@@ -1,3 +1,8 @@
+
+/*
+ * TEST FUNCTIONS
+*/
+
 :-module('tests', [
     test1/0,
     test2/0,
