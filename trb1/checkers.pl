@@ -502,14 +502,23 @@ generate_boards_from_moves(Board, Board_size, [[XI, YI, Moves] | Tail], [AllChai
     generate_boards_from_moves(Board, Board_size, Tail, Boards).
     
 test12 :-
+    %Board = [
+    %    [ '\u25cf', '.', '.', '.' ],
+    %    [ '.' , '.', '.', '.'],
+    %    [ '.' , '.', '.', '.'],
+    %    [ '.','.' , '.', '\u25cb' ]
+    %],
     generate_small_example_board(Board),
     play(Board, 4, '\u25cb', 4, 4, 1, 0).
 
 penis(BoardIn, Board_size, Player_color, Return) :-
-    print_checkers(BoardIn, Board_size),
+    %print_checkers(BoardIn, Board_size),
     player_legal_moves(BoardIn, Board_size, Player_color, LegalMoves, Forced),
+    opponent_color(Player_color, OppColor),
+    count_color(BoardIn, OppColor, OppN),
     (
-        LegalMoves \= [] ->
+        LegalMoves \= [],
+        OppN \= 0 ->
         ( 
             Forced =:= 1 ->
                 adapt_moves(LegalMoves, ForcedLegalMoves),
@@ -523,7 +532,6 @@ penis(BoardIn, Board_size, Player_color, Return) :-
                     Return
                 )
             ;
-            %trace,
             generate_boards_from_moves(BoardIn, LegalMoves, LegalMovesBoardsTemp), !,
             findall(
                 Board,
@@ -535,11 +543,10 @@ penis(BoardIn, Board_size, Player_color, Return) :-
             )
         )
         ;
-        Return = []
+        fail
     ).
 
 minimax(BoardIn, Board_size, Player_color, BestSucc, Val) :-
-    write("PlayerColor: "), write(Player_color), nl,
     penis(BoardIn, Board_size, Player_color, PosList), !,
     best( PosList, Board_size, Player_color, BestSucc, Val)
     ;
@@ -556,9 +563,13 @@ best( [Board1 | BoardList ], Board_size, Player_color, BestBoard, BestVal ) :-
     betterof(Player_color, Board1, Val1, Board2, Val2, BestBoard, BestVal).
 
 betterof(Player_color, Board0, Val0, _, Val1, Board0, Val0) :-
+    %print_checkers(Board0, 4),
+    %print_checkers(Board0, 4),
     Player_color == white ->
         Val0 > Val1, !;
     Val1 > Val0, !.
+
+betterof( _, _, _, Pos1, Val1, Pos1, Val1).
 
 staticval(Player_color, Board, Val) :-
     Player_color == white ->  
@@ -586,6 +597,16 @@ count_row_pieces([Piece | Rest], Piece, Count) :-
 count_row_pieces([Other | Rest], Piece, Count) :-
     Piece \== Other,
     count_row_pieces(Rest, Piece, Count).
+
+count_color(Board, white, N) :-
+    count_pieces(Board, '\u25cf', WhiteCount),
+    count_pieces(Board, '\u265b', WhiteQueenCount),
+    N is WhiteCount +  WhiteQueenCount.
+
+count_color(Board, black, N) :-
+    count_pieces(Board, '\u25cb', WhiteCount),
+    count_pieces(Board, '\u2655', WhiteQueenCount),
+    N is WhiteCount +  WhiteQueenCount.
 
 adapt_moves([], []).
 
