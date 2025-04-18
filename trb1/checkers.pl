@@ -508,17 +508,22 @@ test12 :-
     %    [ '.' , '.', '.', '.'],
     %    [ '.','.' , '.', '\u25cb' ]
     %],
-    generate_small_example_board(Board),
-    play(Board, 4, '\u25cb', 4, 4, 1, 0).
+    Board_size = 6,
+    generate_empty_board(InitialBoard, Board_size),
+    Player_rows is (Board_size-2) // 2,
+    fill_board(InitialBoard, Player_rows, 0, FilledBoard),
+    play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 1, 0).
 
 penis(BoardIn, Board_size, Player_color, Return) :-
     %print_checkers(BoardIn, Board_size),
     player_legal_moves(BoardIn, Board_size, Player_color, LegalMoves, Forced),
+    count_color(BoardIn, Player_color, N),
     opponent_color(Player_color, OppColor),
     count_color(BoardIn, OppColor, OppN),
     (
         LegalMoves \= [],
-        OppN \= 0 ->
+        OppN \= 0,
+        N \= 0 ->
         ( 
             Forced =:= 1 ->
                 adapt_moves(LegalMoves, ForcedLegalMoves),
