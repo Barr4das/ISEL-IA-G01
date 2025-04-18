@@ -5,7 +5,8 @@
 
 :- module('board_generate', [
     generate_empty_board/2,
-    fill_board/4
+    fill_board/4,
+    generate_small_example_board/1
 ]).
 
 /*
@@ -83,3 +84,15 @@ process_row(Row, Piece, Idx, Result) :-
         ;   
         add_pieces(Piece, Row, Result)
     ).
+
+/**
+ * generate_small_example_board(+Board:List<List<Any>>)
+ * Generates a 4 by 4 board with initialized pieces (non functional game state)
+*/
+generate_small_example_board(Board) :-
+    Board = [
+        [ '\u25cf', '.', '\u25cf', '.' ],
+        [ '.' , '.', '.', '.'],
+        [ '.' , '.', '.', '.'],
+        [ '.','\u25cb' , '.', '\u25cb' ]
+    ].

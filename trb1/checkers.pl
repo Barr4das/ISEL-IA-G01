@@ -27,7 +27,7 @@ validate_input_n_args(First, Second) :-
     L1 =:= 2, L2 =:= 2 -> true;
     write("INPUT ERROR"), nl, fail.
 
-read_input(PlayerNumber, X1, Y1, X2, Y2) :-
+read_input(Board_size, PlayerNumber, X1, Y1, X2, Y2) :-
     format("Player ~w (row/column): ", [PlayerNumber]),
     read_string(user, "\n", "\r", _, Response),
     split_string(Response, " ", "", [Start, Finish]), !,
@@ -36,8 +36,8 @@ read_input(PlayerNumber, X1, Y1, X2, Y2) :-
     atom_chars(Finish, [YIn2, XIn2]),
     atom_number(YIn1, Ycalc1),
     atom_number(YIn2, Ycalc2),
-    Y1 is 8 - Ycalc1,
-    Y2 is 8 - Ycalc2,
+    Y1 is Board_size - Ycalc1,
+    Y2 is Board_size - Ycalc2,
     letters(Letters),
     nth0(X1, Letters, XIn1),
     nth0(X2, Letters, XIn2).
@@ -129,7 +129,6 @@ forced_moves_contains(X,Y, [XL, YL | T]) :-
         true;
     forced_moves_contains(X,Y,T).
 
-
 is_move_forced_valid(_, _, _, _, []) :- fail.
 
 is_move_forced_valid(X1, Y1, X2, Y2, [[ForcedX, ForcedY, ForcedMovesList] | Tail]) :-
@@ -217,6 +216,118 @@ player_legal_moves(Board, Board_size, PlayerColor, LegalMoves, Forced) :-
             Forced = 0
         ).
 
+play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
+    
+    % console prints
+    print_checkers(Board, Board_size),
+    player_number(PlayerSymbol, PlayerNumber),
+
+    % read inputs
+    (
+        read_input(Board_size,PlayerNumber, X1, Y1, X2, Y2) -> 
+            true 
+        ;
+        write("Incorrect input format, try again."), nl,
+        sleep(2),
+        play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0)
+    ),
+
+    % input validation
+    (   
+        (
+            \+ valid_coordinate(Board_size, X1, Y1);
+            \+ valid_coordinate(Board_size, X2, Y2);
+            \+ is_corresponding_player(PlayerNumber, Board, X1, Y1)
+        ) ->
+            write("Invalid input. Try again..."), nl,
+            sleep(2),
+            play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0)
+        ;
+
+        % REGULAR MOVE PLAY
+        (
+            LastX =:= Board_size ->
+
+            % verify forced moves
+            piece_color(PlayerSymbol, Color),
+            player_forced_moves(Board, Board_size, Color, PlayerForcedMoves),
+
+            (
+                PlayerForcedMoves \= [] ->
+
+                % check if given move is contained in forced moves list
+                (
+                    \+ is_move_forced_valid(X1, Y1, X2, Y2, PlayerForcedMoves) ->
+                        write("Invalid move! Hint: You must capture a piece when able."), nl,
+                        sleep(2),
+                        play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0)
+                ;
+
+                    % perform capture
+                    capture(Board, X1, Y1, X2, Y2, AfterMoveBoard),
+
+                    % check if it's a COMBO move
+                    has_forced_move(AfterMoveBoard, Board_size, X2, Y2, ComboForcedMove),
+                    (
+                        ComboForcedMove \= [] ->
+                            play(AfterMoveBoard, Board_size, PlayerSymbol, X2, Y2, 1, 0)
+                    ;
+                        opponent_color(PlayerSymbol, OppColor),
+                        % minimax(BoardIn, Board_size, Player_color, BoardBest, Val)
+                        minimax(AfterMoveBoard, Board_size, OppColor, BoardBest, _),
+                        play(BoardBest, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
+                    )
+                )
+
+                ;
+                
+                % no forced moves - proceed with regular move
+                checkers_move(Board, X1, Y1, X2, Y2, MovedBoard),
+                opponent_color(PlayerSymbol, OppColor),
+                % minimax(BoardIn, Board_size, Player_color, BoardBest, Val)
+                minimax(MovedBoard, Board_size, OppColor, BoardBest, _),
+                play(BoardBest, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
+            )
+
+            ;
+
+            % COMBO MOVE
+
+            % valid move verification
+            (
+                % error on this condition
+                (
+                    X1 =\= LastX; 
+                    Y1 =\= LastY
+                ) ->
+                    write("Invalid input. Try again..."), nl,
+                    sleep(2),
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0)
+                ;
+
+                % check existing forced moves
+                has_forced_move(Board, Board_size, LastX, LastY, ForcedMoveList),
+                (
+                    forced_moves_contains(X2, Y2, ForcedMoveList) ->
+                        % perform capture
+                        capture(Board, X1, Y1, X2, Y2, CapturedBoard),
+                        % check if there's another forced move
+                        has_forced_move(CapturedBoard, Board_size, X2, Y2, ComboForcedMoves),
+                        (
+                            ComboForcedMoves \= [] ->
+                                play(CapturedBoard, Board_size, PlayerSymbol, X2, Y2, 1, 0)
+                        ;
+                            opponent_symbol(PlayerSymbol, Opp),
+                            play(CapturedBoard, Board_size, Opp, Board_size, Board_size, 1, 0)
+                        )
+                ;
+                    write("Invalid move! Hint: You must capture a piece when able."), nl,
+                    sleep(2),
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0)
+                )
+            )
+        )
+    ).
 
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
 
@@ -226,7 +337,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
 
     % read inputs
     (
-        read_input(PlayerNumber, X1, Y1, X2, Y2) -> 
+        read_input(Board_size, PlayerNumber, X1, Y1, X2, Y2) -> 
             true 
         ;
         write("Incorrect input format, try again."), nl,
@@ -248,7 +359,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
 
         % REGULAR MOVE PLAY
         (
-            LastX =:= 8 ->
+            LastX =:= Board_size ->
 
             % verify forced moves
             piece_color(PlayerSymbol, Color),
@@ -390,49 +501,92 @@ generate_boards_from_moves(Board, Board_size, [[XI, YI, Moves] | Tail], [AllChai
     ),
     generate_boards_from_moves(Board, Board_size, Tail, Boards).
     
+test12 :-
+    generate_small_example_board(Board),
+    play(Board, 4, '\u25cb', 4, 4, 1, 0).
 
-%minimax(Board, Board_size, Player, ViewRange, Val) :-
-%    player_legal_moves(Board, Board_size, Player, LegalMoves, Forced),
-%    LegalMoves \= [] ->
-%        write("o rodrigo é tão bom"), nl;
-%    write("é pah... inacreditavel"), nl.
-%        % [move, valor]
-%        % iteração sobre todas as jogadas possíveis
-%            % generate_boards_from_moves(Board, LegalMoves, )
-%            % avaliar cada uma
-%            %minimax
-%
-%        %staticval
+penis(BoardIn, Board_size, Player_color, Return) :-
+    print_checkers(BoardIn, Board_size),
+    player_legal_moves(BoardIn, Board_size, Player_color, LegalMoves, Forced),
+    (
+        LegalMoves \= [] ->
+        ( 
+            Forced =:= 1 ->
+                adapt_moves(LegalMoves, ForcedLegalMoves),
+                generate_boards_from_moves(BoardIn, Board_size, ForcedLegalMoves, ForcedMovesBoardsTemp), !,
+                findall(
+                    Board,
+                    (
+                        member(Boards, ForcedMovesBoardsTemp),
+                        member(Board, Boards)
+                    ),
+                    Return
+                )
+            ;
+            %trace,
+            generate_boards_from_moves(BoardIn, LegalMoves, LegalMovesBoardsTemp), !,
+            findall(
+                Board,
+                (
+                    member(Boards, LegalMovesBoardsTemp),
+                    member(Board, Boards)
+                ),
+                Return
+            )
+        )
+        ;
+        Return = []
+    ).
 
-%bot(Board, Board_size, Player, ViewRange, BestMove) :-
-%    minimax(Board, Board_size, Player, ViewRange, BestMove).
-%
-%    % fazer iteração sobre cada jogada legal
-%    %todo
+minimax(BoardIn, Board_size, Player_color, BestSucc, Val) :-
+    write("PlayerColor: "), write(Player_color), nl,
+    penis(BoardIn, Board_size, Player_color, PosList), !,
+    best( PosList, Board_size, Player_color, BestSucc, Val)
+    ;
+    staticval(Player_color,BoardIn, Val).
 
-/**
-    PlayerForcedMoves: 
-    [
-        [
-            4,
-            6,
-            [2,4],
-            [6,4]
-        ]
-    ]
-    to
-    PlayerForcedMoves: 
-    [
-        [
-            4,
-            6, 
-            [
-                [2,4],
-                [6,4]
-            ]
-        ]
-    ]
-**/
+best( [Board], Board_size, Player_color, Board, Val) :-
+    opponent_color(Player_color, OppColor),
+    minimax( Board, Board_size, OppColor, _, Val), !.
+
+best( [Board1 | BoardList ], Board_size, Player_color, BestBoard, BestVal ) :-
+    opponent_color(Player_color, OppColor),
+    minimax( Board1, Board_size, OppColor, _, Val1),
+    best(BoardList, Board_size, Player_color, Board2, Val2),
+    betterof(Player_color, Board1, Val1, Board2, Val2, BestBoard, BestVal).
+
+betterof(Player_color, Board0, Val0, _, Val1, Board0, Val0) :-
+    Player_color == white ->
+        Val0 > Val1, !;
+    Val1 > Val0, !.
+
+staticval(Player_color, Board, Val) :-
+    Player_color == white ->  
+        count_pieces(Board, '\u25cb', WhiteNumber),
+        count_pieces(Board, '\u25cf', BlackNumber),
+        Val is WhiteNumber -  BlackNumber
+    ;
+    count_pieces(Board, '\u25cb', WhiteNumber),
+    count_pieces(Board, '\u25cf', BlackNumber),
+    Val is BlackNumber - WhiteNumber.
+
+count_pieces([], _, 0).
+
+count_pieces([Row | Rest], Piece, Count) :-
+    count_row_pieces(Row, Piece, RowCount),
+    count_pieces(Rest, Piece, RestCount),
+    Count is RowCount + RestCount.
+
+count_row_pieces([], _, 0).
+
+count_row_pieces([Piece | Rest], Piece, Count) :-
+    count_row_pieces(Rest, Piece, RestCount),
+    Count is RestCount + 1.
+
+count_row_pieces([Other | Rest], Piece, Count) :-
+    Piece \== Other,
+    count_row_pieces(Rest, Piece, Count).
+
 adapt_moves([], []).
 
 adapt_moves([[XI, YI | MovesTail] | Tail], [[XI, YI, MovesTail] | TailForcedMoves]) :-
@@ -442,4 +596,16 @@ test11 :-
     Board_size = 8,
     generate_empty_board(Board, Board_size),
     fill_board(Board, 3, 0, Result),
-    print_checkers(Result, Board_size).
+    player_legal_moves(Result, Board_size, 'black', LegalMoves, _), 
+    generate_boards_from_moves(Result, LegalMoves, GeneratedBoards),
+
+    forall(
+        (
+            member(BoardList, GeneratedBoards),
+            member(BoardItem, BoardList)
+        ),
+        (
+            print_checkers(BoardItem, Board_size),
+            nl
+        )
+    ).
