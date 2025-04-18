@@ -1,76 +1,8 @@
+:- use_module('definitions').
+:- use_module('tests').
+:- use_module('board_print').
 
-letters(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']).
-
-is_queen('♕').
-is_queen('♛').
-
-piece_color('\u25CB', white).
-piece_color('\u25CF', black).
-piece_color('\u2655', white).
-piece_color('\u265B', black).
-piece_color('.', none).
-
-opponent_color('\u25CB', black).
-opponent_color('\u25CF', white).
-opponent_color('\u2655', black).
-opponent_color('\u265B', white).
-opponent_color('.', none).
-
-opponent_symbol('\u25cb', '\u25cf').
-opponent_symbol('\u25cf', '\u25cb').
-
-player_number('\u25cb', 1).
-player_number('\u25cf', 2).
-player_number('\u2655', 1).
-player_number('\u265B', 2).
-
-first([], []).
-first(X, [X|_]).
-
-print_item(Item) :- write(' '), write(Item), write(' ').
-
-printList([]).
-
-printList([Head | Tail]) :-
-    print_item(Head),
-    printList(Tail).
-
-printList([], _).
-printList(_, 0).
-printList([Head | Tail], N) :-
-    N > 0 -> 
-        print_item(Head),
-        N1 is N - 1,
-        printList(Tail, N1).
-
-printBoard([], _).
-printBoard([], 0).
-
-printBoard([Row| Tail], N) :-
-    N > 0, N < 10 -> 
-        write(' '),
-        printBoardHelper([Row|Tail], N);
-    printBoardHelper([Row|Tail], N).
-
-printBoardHelper([Row|Tail], N) :-
-    print_item(N),
-    printList(Row),
-    print_item(N),
-    nl,
-    N1 is N - 1,
-    printBoard(Tail, N1).
-
-print_checkers(Board, N) :-
-    write('    '),
-    letters(Letters),
-    printList(Letters, N),
-    nl,
-    printBoard(Board, N),
-    write('    '),
-    printList(Letters, N),
-    nl.
-
-generateBoard(Board, N) :-
+generate_empty_board(Board, N) :-
     length(Board, N), 
     length(Row, N),
     maplist(=('.'), Row),
@@ -115,7 +47,6 @@ replace_nth0(List, Index, OldElem, NewElem, NewList) :-
    nth0(Index,List,OldElem,Transfer),
    nth0(Index,NewList,NewElem,Transfer).
 
-% only does the movement (no logic envolved)
 move(PlayerSymbol, XStart, YStart, XFinish, YFinish, BoardIn, BoardOut) :-
     nth0(YStart, BoardIn, YList),
     replace_nth0(YList, XStart, PlayerSymbol, '.', NewYList),
@@ -214,7 +145,7 @@ is_pos_empty(Board, X, Y) :-
     nth0(X, YList, Pos),
     Pos == '.'.
 
-%SEM RAINHAS
+% SEM RAINHAS
 is_legal_move(Board, PieceType, XIn, YIn, TargetX, TargetY) :-
     PieceType == '\u25cb' ->
         is_pos_empty(Board, TargetX, TargetY),
@@ -438,7 +369,7 @@ checkers(Board_size) :-
     write("Welcome to the Checkers Prolog game!"), nl,
 
     % base board preparation
-    generateBoard(InitialBoard, Board_size),
+    generate_empty_board(InitialBoard, Board_size),
     Player_rows is (Board_size-2) // 2,
     fill_board(InitialBoard, Player_rows, 0, FilledBoard),
 
@@ -446,7 +377,7 @@ checkers(Board_size) :-
 
     play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 0, 0).
 
-chain_captures(Board, Board_size, X, Y, PlayerSymbol, [Board]) :-
+chain_captures(Board, Board_size, X, Y, _, [Board]) :-
     has_forced_move(Board, Board_size, X, Y, ForcedMoves),
     ForcedMoves == [].
 
@@ -497,78 +428,24 @@ generate_boards_from_moves(Board, Board_size, [[XI, YI, Moves] | Tail], [AllChai
     generate_boards_from_moves(Board, Board_size, Tail, Boards).
     
 
-minimax(Board, Board_size, Player, ViewRange, Val) :-
-    player_legal_moves(Board, Board_size, Player, LegalMoves, Forced),
-    LegalMoves \= [] ->
-        write("o rodrigo é tão bom"), nl;
-    write("é pah... inacreditavel"), nl.
-        % [move, valor]
-        % iteração sobre todas as jogadas possíveis
-            % generate_boards_from_moves(Board, LegalMoves, )
-            % avaliar cada uma
-            %minimax
+%minimax(Board, Board_size, Player, ViewRange, Val) :-
+%    player_legal_moves(Board, Board_size, Player, LegalMoves, Forced),
+%    LegalMoves \= [] ->
+%        write("o rodrigo é tão bom"), nl;
+%    write("é pah... inacreditavel"), nl.
+%        % [move, valor]
+%        % iteração sobre todas as jogadas possíveis
+%            % generate_boards_from_moves(Board, LegalMoves, )
+%            % avaliar cada uma
+%            %minimax
+%
+%        %staticval
 
-        %staticval
-
-bot(Board, Board_size, Player, ViewRange, BestMove) :-
-    minimax(Board, Board_size, Player, ViewRange, BestMove).
-
-    % fazer iteração sobre cada jogada legal
-    %todo
-
-test10 :-
-    Board = [
-        ['.', '.', '.', '.', '.', '.', '.', '.'],  
-        ['.', '.', '.', '.', '.', '.', '.', '.'],  
-        ['.', '.', '.', '.', '.', '.', '.', '.'],  
-        ['.', '\u25cb', '.', '\u25cb', '.', '.', '.', '.'],  
-        ['.', '.', '.', '.', '.', '.', '.', '.'],  
-        ['.', '.', '.', '\u25cb', '.', '\u25cb', '.', '.'], 
-        ['.', '.', '.', '.', '\u25cf', '.', '.', '.'],  
-        ['.', '.', '.', '.', '.', '.', '.', '.']   
-    ],
-    Board_size = 8,
-
-    player_legal_moves(Board, Board_size, black, LegalMoves, _),
-
-    adapt_moves(LegalMoves, ForcedStructured),
-
-    generate_boards_from_moves(Board, Board_size, ForcedStructured, GeneratedBoards),
-
-    forall(
-        (
-            member(BoardList, GeneratedBoards),
-            member(BoardItem, BoardList)
-        ),
-        (
-            print_checkers(BoardItem, Board_size),
-            nl
-        )
-    ).
-
-test9 :-
-    Board_size = 8,
-    generateBoard(Board, Board_size),
-    Player_rows = 3,
-    fill_board(Board, Player_rows, 0, NewBoard),
-    
-    Player = white,
-
-    player_legal_moves(NewBoard, Board_size, Player, LegalMoves, Forced),
-
-    generate_boards_from_moves(NewBoard, LegalMoves, GeneratedBoards),
-
-
-    forall(
-        (
-            member(BoardList, GeneratedBoards),
-            member(BoardItem, BoardList)
-        ),
-        (
-            print_checkers(BoardItem, Board_size),
-            nl
-        )
-    ).
+%bot(Board, Board_size, Player, ViewRange, BestMove) :-
+%    minimax(Board, Board_size, Player, ViewRange, BestMove).
+%
+%    % fazer iteração sobre cada jogada legal
+%    %todo
 
 /**
     PlayerForcedMoves: 
