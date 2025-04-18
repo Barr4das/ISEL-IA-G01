@@ -1,4 +1,8 @@
 
+/*
+ * CREATE BOARD STRUCTURE
+*/
+
 :- module('board_generate', [
     generate_empty_board/2,
     fill_board/4
