@@ -246,7 +246,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
         ) ->
             write("Invalid input. Try again..."), nl,
             sleep(2),
-            play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0)
+            play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0), !
         ;
 
         % REGULAR MOVE PLAY
@@ -265,7 +265,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                     \+ is_move_forced_valid(X1, Y1, X2, Y2, PlayerForcedMoves) ->
                         write("Invalid move! Hint: You must capture a piece when able."), nl,
                         sleep(2),
-                        play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0)
+                        play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0), !
                 ;
 
                     % perform capture
@@ -310,7 +310,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                 ) ->
                     write("Invalid input. Try again..."), nl,
                     sleep(2),
-                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0)
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0), !
                 ;
 
                 % check existing forced moves
@@ -331,7 +331,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                 ;
                     write("Invalid move! Hint: You must capture a piece when able."), nl,
                     sleep(2),
-                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0)
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0), !
                 )
             )
         )
@@ -615,15 +615,22 @@ count_row_pieces([Other | Rest], Piece, Count) :-
     Piece \== Other,
     count_row_pieces(Rest, Piece, Count).
 
-count_color(Board, white, N) :-
-    count_pieces(Board, '\u25cf', WhiteCount),
-    count_pieces(Board, '\u265b', WhiteQueenCount),
-    N is WhiteCount +  WhiteQueenCount.
 
-count_color(Board, black, N) :-
+/**
+piece_color('\u25cb', white).
+piece_color('\u25cf', black).
+piece_color('\u2655', white).
+piece_color('\u265B', black).
+*/
+count_color(Board, white, N) :-
     count_pieces(Board, '\u25cb', WhiteCount),
     count_pieces(Board, '\u2655', WhiteQueenCount),
     N is WhiteCount +  WhiteQueenCount.
+
+count_color(Board, black, N) :-
+    count_pieces(Board, '\u25cf', BlackCount),
+    count_pieces(Board, '\u265B', BlackQueenCount),
+    N is BlackCount +  BlackQueenCount.
 
 adapt_moves([], []).
 
@@ -632,12 +639,8 @@ adapt_moves([[XI, YI | MovesTail] | Tail], [[XI, YI, MovesTail] | TailForcedMove
 
 check_game_over(Board, Board_size, PlayerSymbol) :-
     piece_color(PlayerSymbol, Color),
-    %write(Color), nl,
     count_color(Board, Color, N),
-    %write(N), nl,
     opponent_color(Color, OppColor),
-    count_color(Board, OppColor, OppN),
-    %write(OppN), nl,
     (  
         N =:= 0 ->
             opponent_symbol(PlayerSymbol, OppSym),
@@ -708,6 +711,7 @@ test15 :-
             ['.', '.', '.', '.', '.', '.', '.', '.']   
         ],
     Board_size = 8,
+    PlayerSymbol = '\u25cb',
     print_checkers(Board, Board_size), nl,
     capture(Board, 2, 6, 0, 4, AfterMoveBoard),
     play(AfterMoveBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0).
