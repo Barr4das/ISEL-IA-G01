@@ -18,14 +18,14 @@ letters(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']).
 is_queen('♕').
 is_queen('♛').
 
-piece_color('\u25CB', white).
-piece_color('\u25CF', black).
+piece_color('\u25cb', white).
+piece_color('\u25cf', black).
 piece_color('\u2655', white).
 piece_color('\u265B', black).
 piece_color('.', none).
 
-opponent_color('\u25CB', black).
-opponent_color('\u25CF', white).
+opponent_color('\u25cb', black).
+opponent_color('\u25cf', white).
 opponent_color('\u2655', black).
 opponent_color('\u265B', white).
 opponent_color('.', none).
