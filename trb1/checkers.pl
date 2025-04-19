@@ -34,13 +34,15 @@ read_input(Board_size, PlayerNumber, X1, Y1, X2, Y2) :-
     validate_input_n_args(Start, Finish),
     atom_chars(Start, [YIn1, XIn1]),
     atom_chars(Finish, [YIn2, XIn2]),
+    upcase_atom(XIn1, XUp1),
+    upcase_atom(XIn2, XUp2),
     atom_number(YIn1, Ycalc1),
     atom_number(YIn2, Ycalc2),
     Y1 is Board_size - Ycalc1,
     Y2 is Board_size - Ycalc2,
     letters(Letters),
-    nth0(X1, Letters, XIn1),
-    nth0(X2, Letters, XIn2).
+    nth0(X1, Letters, XUp1),
+    nth0(X2, Letters, XUp2).
 
 valid_coordinate(Board_size, X, Y) :-
     X >= 0,
@@ -137,6 +139,7 @@ is_move_forced_valid(X1, Y1, X2, Y2, [[ForcedX, ForcedY, ForcedMovesList] | Tail
             forced_moves_contains(X2, Y2, ForcedMovesList);
         is_move_forced_valid(X1, Y1, X2, Y2, Tail)
     ).
+
 remove_piece(Board, X, Y, BoardOut) :-
     nth0(Y, Board, YList),
     nth0(X, YList, Item),
@@ -348,7 +351,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
         ;
         write("Incorrect input format, try again."), nl,
         sleep(2),
-        play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+        play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0), !
     ),
 
     % input validation
@@ -360,7 +363,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
         ) ->
             write("Invalid input. Try again..."), nl,
             sleep(2),
-            play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+            play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0), !
         ;
 
         % REGULAR MOVE PLAY
@@ -379,7 +382,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
                     \+ is_move_forced_valid(X1, Y1, X2, Y2, PlayerForcedMoves) ->
                         write("Invalid move! Hint: You must capture a piece when able."), nl,
                         sleep(2),
-                        play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+                        play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0), !
                 ;
 
                     % perform capture
@@ -417,7 +420,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
                 ) ->
                     write("Invalid input. Try again..."), nl,
                     sleep(2),
-                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0), !
                 ;
 
                 % check existing forced moves
@@ -438,7 +441,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
                 ;
                     write("Invalid move! Hint: You must capture a piece when able."), nl,
                     sleep(2),
-                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0)
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0), !
                 )
             )
         )
@@ -520,6 +523,9 @@ test12 :-
     fill_board(InitialBoard, Player_rows, 0, FilledBoard),
     play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 1, 0).
 
+/*????????????????????????*/
+/*????????????????????????*/
+/*????????????????????????*/
 penis(BoardIn, Board_size, Player_color, Return) :-
     %print_checkers(BoardIn, Board_size),
     player_legal_moves(BoardIn, Board_size, Player_color, LegalMoves, Forced),
@@ -626,30 +632,28 @@ adapt_moves([[XI, YI | MovesTail] | Tail], [[XI, YI, MovesTail] | TailForcedMove
 
 check_game_over(Board, Board_size, PlayerSymbol) :-
     piece_color(PlayerSymbol, Color),
-    write(Color), nl,
+    %write(Color), nl,
     count_color(Board, Color, N),
-    write(N), nl,
+    %write(N), nl,
     opponent_color(Color, OppColor),
     count_color(Board, OppColor, OppN),
-    write(OppN), nl,
+    %write(OppN), nl,
     (  
         N =:= 0 ->
-         opponent_symbol(PlayerSymbol, OppSym),
-         piece_color(OppSym, OppColor),
-         format("Player ~w has no pieces Player ~w wins!~n", [Color, OppColor]),
-         print_checkers(Board, Board_size), % este print não esta a funcionar porque pelo meio ainda chamamos o minimax que acaba por estragar o board
-         halt
-    ;  % Empate por falta de legal moves
-       player_legal_moves(Board, Board_size, Color, LegalMoves, _),
-       LegalMoves == [] ->
-         format("Player ~w has no legal moves Player ~w wins!~n", [Color, OppColor]),
-         print_checkers(Board, Board_size),
-         halt
-    ;
-       true
+            opponent_symbol(PlayerSymbol, OppSym),
+            piece_color(OppSym, OppColor),
+            format("Player ~w has no pieces Player ~w wins!~n", [Color, OppColor]), nl,
+            print_checkers(Board, Board_size), !,
+            halt
+        ;  % Empate por falta de legal moves
+        player_legal_moves(Board, Board_size, Color, LegalMoves, _),
+        LegalMoves == [] ->
+            format("Player ~w has no legal moves Player ~w wins!~n", [Color, OppColor]), nl,
+            print_checkers(Board, Board_size), !,
+            halt
+        ;
+        true
     ).
-
-
 
 test11 :-
     Board_size = 8,
@@ -687,6 +691,23 @@ test14 :-
             ['.', '.', '.', '.', '.', '.', '.', '.']   
         ],
         Board_size = 8,
+        print_checkers(Board, Board_size),
         %minimax(BoardIn, Board_size, Player_color, BestSucc, Val) :-
         minimax(Board, Board_size, black, BoardBest, _),
         print_checkers(BoardBest, Board_size).
+
+test15 :-
+    Board = [
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '\u25cb', '.', '.', '.', '.', '.', '.'], 
+            ['.', '.', '\u25cf', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.']   
+        ],
+    Board_size = 8,
+    print_checkers(Board, Board_size), nl,
+    capture(Board, 2, 6, 0, 4, AfterMoveBoard),
+    play(AfterMoveBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0).
