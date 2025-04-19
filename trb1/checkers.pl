@@ -218,6 +218,8 @@ player_legal_moves(Board, Board_size, PlayerColor, LegalMoves, Forced) :-
 
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
     
+    check_game_over(Board, Board_size, PlayerSymbol),
+
     % console prints
     print_checkers(Board, Board_size),
     player_number(PlayerSymbol, PlayerNumber),
@@ -285,8 +287,11 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                 checkers_move(Board, X1, Y1, X2, Y2, MovedBoard),
                 opponent_color(PlayerSymbol, OppColor),
                 % minimax(BoardIn, Board_size, Player_color, BoardBest, Val)
-                minimax(MovedBoard, Board_size, OppColor, BoardBest, _),
-                play(BoardBest, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
+                (
+                    minimax(MovedBoard, Board_size, OppColor, BoardBest, _)->
+                        play(BoardBest, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
+                ),
+                play(MovedBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
             )
 
             ;
@@ -331,6 +336,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
 
 play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
 
+    check_game_over(Board, Board_size, PlayerSymbol),
     % console prints
     print_checkers(Board, Board_size),
     player_number(PlayerSymbol, PlayerNumber),
@@ -508,7 +514,7 @@ test12 :-
     %    [ '.' , '.', '.', '.'],
     %    [ '.','.' , '.', '\u25cb' ]
     %],
-    Board_size = 6,
+    Board_size = 4,
     generate_empty_board(InitialBoard, Board_size),
     Player_rows is (Board_size-2) // 2,
     fill_board(InitialBoard, Player_rows, 0, FilledBoard),
@@ -571,8 +577,8 @@ betterof(Player_color, Board0, Val0, _, Val1, Board0, Val0) :-
     %print_checkers(Board0, 4),
     %print_checkers(Board0, 4),
     Player_color == white ->
-        Val0 > Val1, !;
-    Val1 > Val0, !.
+        Val0 < Val1, !;
+    Val1 < Val0, !.
 
 betterof( _, _, _, Pos1, Val1, Pos1, Val1).
 
@@ -618,6 +624,33 @@ adapt_moves([], []).
 adapt_moves([[XI, YI | MovesTail] | Tail], [[XI, YI, MovesTail] | TailForcedMoves]) :-
     adapt_moves(Tail, TailForcedMoves).
 
+check_game_over(Board, Board_size, PlayerSymbol) :-
+    piece_color(PlayerSymbol, Color),
+    write(Color), nl,
+    count_color(Board, Color, N),
+    write(N), nl,
+    opponent_color(Color, OppColor),
+    count_color(Board, OppColor, OppN),
+    write(OppN), nl,
+    (  
+        N =:= 0 ->
+         opponent_symbol(PlayerSymbol, OppSym),
+         piece_color(OppSym, OppColor),
+         format("Player ~w has no pieces Player ~w wins!~n", [Color, OppColor]),
+         print_checkers(Board, Board_size), % este print não esta a funcionar porque pelo meio ainda chamamos o minimax que acaba por estragar o board
+         halt
+    ;  % Empate por falta de legal moves
+       player_legal_moves(Board, Board_size, Color, LegalMoves, _),
+       LegalMoves == [] ->
+         format("Player ~w has no legal moves Player ~w wins!~n", [Color, OppColor]),
+         print_checkers(Board, Board_size),
+         halt
+    ;
+       true
+    ).
+
+
+
 test11 :-
     Board_size = 8,
     generate_empty_board(Board, Board_size),
@@ -635,3 +668,25 @@ test11 :-
             nl
         )
     ).
+
+test13 :-
+Board_size = 4,
+    generate_empty_board(Board, Board_size),
+    fill_board(Board, 1, 0, Result),
+    play(Result, Board_size, '\u25cb', Board_size, Board_size, 1, 0).
+
+test14 :-
+    Board = [
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '\u25cb', '.', '\u25cb', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '\u25cb', '.', '\u25cb', '.', '.', '.', '.'], 
+            ['.', '.', '\u25cf', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.']   
+        ],
+        Board_size = 8,
+        %minimax(BoardIn, Board_size, Player_color, BestSucc, Val) :-
+        minimax(Board, Board_size, black, BoardBest, _),
+        print_checkers(BoardBest, Board_size).
