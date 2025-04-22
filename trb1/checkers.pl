@@ -278,8 +278,9 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                             play(AfterMoveBoard, Board_size, PlayerSymbol, X2, Y2, 1, 0)
                     ;
                         opponent_color(PlayerSymbol, OppColor),
-                        % minimax(BoardIn, Board_size, Player_color, BoardBest, Val)
-                        minimax(AfterMoveBoard, Board_size, OppColor, BoardBest, _),
+                        %minimax(AfterMoveBoard, Board_size, OppColor, BoardBest, _),
+                        %alpha_beta(BoardIn, Board_size, Player_color, Alpha, Beta, GoodBoard, Val)
+                        alpha_beta(AfterMoveBoard, Board_size, OppColor, -9999, 9999, GoodBoard, _),
                         play(BoardBest, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
                     )
                 )
@@ -289,9 +290,9 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                 % no forced moves - proceed with regular move
                 checkers_move(Board, X1, Y1, X2, Y2, MovedBoard),
                 opponent_color(PlayerSymbol, OppColor),
-                % minimax(BoardIn, Board_size, Player_color, BoardBest, Val)
                 (
-                    minimax(MovedBoard, Board_size, OppColor, BoardBest, _)->
+                    %minimax(MovedBoard, Board_size, OppColor, BoardBest, _)
+                    alpha_beta(MovedBoard, Board_size, OppColor, -9999, 9999, GoodBoard, _) ->
                         play(BoardBest, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
                 ),
                 play(MovedBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
@@ -715,3 +716,52 @@ test15 :-
     print_checkers(Board, Board_size), nl,
     capture(Board, 2, 6, 0, 4, AfterMoveBoard),
     play(AfterMoveBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0).
+
+
+
+alpha_beta(BoardIn, Board_size, Player_color, Alpha, Beta, GoodBoard, Val) :-
+    penis(BoardIn, Board_size, Player_color, PosList), !,
+    bounded_best(PosList, Board_size, Player_color, Alpha, Beta, GoodBoard, Val)
+    ;
+    staticval(Player_color, BoardIn, Val).
+%best( [Board1 | BoardList ], Board_size, Player_color, BestBoard, BestVal )
+bounded_best( [Board1 | BoardList], Board_size, Player_color, Alpha, Beta, GoodBoard, GoodVal) :-
+    alpha_beta(Board1, Board_size, Player_color, Alpha, Beta, GoodBoard, Val),
+    good_enough(BoardList, Board_size, Player_color, Alpha, Beta, Board1, Val, GoodBoard, GoodVal).
+
+good_enough( [], _, _, _, _, Board, Val, Board, Val) :- !.
+
+/**
+min é white
+max é black
+*/
+good_enough( _, _, Player_color, Alpha, Beta, Board, Val, Board, Val) :-
+    Player_color == white ->
+        Val > Beta, !;
+    Val < Alpha, !.
+
+good_enough( BoardList, Board_size, Player_color, Alpha, Beta, Board, Val, GoodBoard, GoodVal) :-
+    new_bounds(Alpha, Beta, Board, Player_color, Val, NewAlpha, NewBeta),
+    bounded_best(BoardList, Board_size, Player_color, NewAlpha, NewBeta, NewBoard, NewVal),
+    better_of(Board, Player_color, Val, NewBoard, NewVal, GoodBoard, GoodVal).
+
+
+new_bounds( Alpha, Beta, Board, Player_color, Val, NewAlpha, NewBeta) :-
+	Player_color == white, Val > Alpha, !. 
+
+new_bounds( Alpha, Beta, Board, Player_color, Val, NewAlpha, NewBeta) :-
+    Player_color == black, Val < Beta, !. 
+
+better_of(Board, Player_color, Val, NewBoard, NewVal, GoodBoard, GoodVal) :- 
+    Player_color == white ->
+        Val > NewVal, !;
+    Val < NewVal, !.
+
+better_of(_, _, _, NewBoard, NewVal, NewBoard, NewVal).
+
+
+test16 :-
+Board_size = 4,
+    generate_empty_board(Board, Board_size),
+    fill_board(Board, 1, 0, Result),
+    play(Result, Board_size, '\u25cb', Board_size, Board_size, 1, 0).
