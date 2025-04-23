@@ -443,7 +443,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
         )
     ).
 
-checkers(Board_size) :-
+checkers(Board_size, Bot) :-
 
     write("Welcome to the Checkers Prolog game!"), nl,
 
@@ -454,7 +454,7 @@ checkers(Board_size) :-
 
     % VERIFY IF PLAYING WITH BOT
 
-    play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 0, 0).
+    play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, Bot, 0).
 
 chain_captures(Board, Board_size, X, Y, _, [Board]) :-
     has_forced_move(Board, Board_size, X, Y, ForcedMoves),
