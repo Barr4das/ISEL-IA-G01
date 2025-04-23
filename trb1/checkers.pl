@@ -524,10 +524,8 @@ test12 :-
     fill_board(InitialBoard, Player_rows, 0, FilledBoard),
     play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, 1, 0).
 
-/*????????????????????????*/
-/*????????????????????????*/
-/*????????????????????????*/
-penis(BoardIn, Board_size, Player_color, Return) :-
+
+moves(BoardIn, Board_size, Player_color, Return) :-
     %print_checkers(BoardIn, Board_size),
     player_legal_moves(BoardIn, Board_size, Player_color, LegalMoves, Forced),
     count_color(BoardIn, Player_color, N),
@@ -565,7 +563,7 @@ penis(BoardIn, Board_size, Player_color, Return) :-
     ).
 
 minimax(BoardIn, Board_size, Player_color, BestSucc, Val) :-
-    penis(BoardIn, Board_size, Player_color, PosList), !,
+    moves(BoardIn, Board_size, Player_color, PosList), !,
     best( PosList, Board_size, Player_color, BestSucc, Val)
     ;
     staticval(Player_color,BoardIn, Val).
@@ -718,12 +716,13 @@ test15 :-
     play(AfterMoveBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0).
 
 
-
+/**
 alpha_beta(BoardIn, Board_size, Player_color, Alpha, Beta, GoodBoard, Val) :-
-    penis(BoardIn, Board_size, Player_color, PosList), !,
+    moves(BoardIn, Board_size, Player_color, PosList), !,
     bounded_best(PosList, Board_size, Player_color, Alpha, Beta, GoodBoard, Val)
     ;
     staticval(Player_color, BoardIn, Val).
+
 %best( [Board1 | BoardList ], Board_size, Player_color, BestBoard, BestVal )
 bounded_best( [Board1 | BoardList], Board_size, Player_color, Alpha, Beta, GoodBoard, GoodVal) :-
     alpha_beta(Board1, Board_size, Player_color, Alpha, Beta, GoodBoard, Val),
@@ -731,10 +730,8 @@ bounded_best( [Board1 | BoardList], Board_size, Player_color, Alpha, Beta, GoodB
 
 good_enough( [], _, _, _, _, Board, Val, Board, Val) :- !.
 
-/**
-min é white
-max é black
-*/
+
+% min = white, max = black
 good_enough( _, _, Player_color, Alpha, Beta, Board, Val, Board, Val) :-
     Player_color == white ->
         Val > Beta, !;
@@ -765,3 +762,108 @@ Board_size = 4,
     generate_empty_board(Board, Board_size),
     fill_board(Board, 1, 0, Result),
     play(Result, Board_size, '\u25cb', Board_size, Board_size, 1, 0).
+*/
+
+%alphabeta( Pos, Alpha, Beta, GoodPos, Val) :-
+alphabeta( Board, Board_size, PlayerColor, Alpha, Beta, GoodBoard, Val) :-
+	%moves( Pos, PosList), !,
+    moves(Board, Board_size, PlayerColor, BoardList), !,
+    %boundedbest( PosList, Alpha, Beta, GoodPos, Val)
+	boundedbest( BoardList, Board_size, PlayerColor, Alpha, Beta, GoodBoard, Val)
+	; % Or
+	%staticval( Pos, Val).                   % Static value of Pos
+    staticval(PlayerColor, Board, Val).     % Static value of Pos
+	
+%boundedbest( [Pos | PosList], Alpha, Beta, GoodPos, GoodVal) :-
+boundedbest( [Board | BoardList], Board_size, PlayerColor, Alpha, Beta, GoodBoard, GoodVal) :-
+	%alphabeta( Board, Alpha, Beta, _, Val),
+    opponent_color(PlayerColor, OppColor),
+    alphabeta( Board, Board_size, OppColor, Alpha, Beta, _, Val),
+    %goodenough( PosList, Alpha, Beta, Pos, Val, GoodPos, GoodVal).
+	goodenough( BoardList, Board_size, PlayerColor, Alpha, Beta, Board, Val, GoodBoard, GoodVal).
+
+
+%goodenough( [], _, _, Pos, Val, Pos, Val) :- !.        % No other candidate
+goodenough( [], _, _, _, _, Board, Val, Board, Val) :- !.     % No other candidate
+
+
+%goodenough( _, Alpha, Beta, Pos, Val, Pos, Val) :-
+goodenough( _, _, PlayerColor, Alpha, Beta, Board, Val, Board, Val) :-
+	min_to_move( PlayerColor), Val > Beta, !   % Maximizer attained upper bound
+	; % Or
+	max_to_move( PlayerColor), Val < Alpha, !. % Minimizer attained lower bound
+
+
+%goodenough( PosList, Alpha, Beta, Pos, Val, GoodPos, GoodVal) :-
+goodenough( BoardList, Board_size, PlayerColor, Alpha, Beta, Board, Val, GoodBoard, GoodVal) :-
+	%newbounds( Alpha, Beta, Pos, Val, NewAlpha, NewBeta),      % Refine bounds
+    newbounds( PlayerColor, Alpha, Beta, Board, Val, NewAlpha, NewBeta),
+    %boundedbest( PosList, NewAlpha, NewBeta, Pos1, Val1),
+	boundedbest( BoardList, Board_size, PlayerColor, NewAlpha, NewBeta, Pos1, Val1),
+    %betterof( Pos, Val, Pos1, Val1, GoodPos, GoodVal).         % Refine bounds
+	betterof( PlayerColor, Board, Val, Pos1, Val1, GoodBoard, GoodVal).      % Refine bounds
+
+
+%newbounds( Alpha, Beta, Pos, Val, Val, Beta) :-
+newbounds( PlayerColor, Alpha, Beta, Board, Val, Val, Beta) :-
+	min_to_move( PlayerColor), Val > Alpha, !.         % Maximizer increased lower bound
+
+
+%newbounds( Alpha, Beta, Pos, Val, Alpha, Val) :-
+newbounds( PlayerColor, Alpha, Beta, Board, Val, Alpha, Val) :-
+	max_to_move( PlayerColor), Val < Beta, !.          % Minimizer decreased upper bound
+	
+	
+%newbounds( Alpha, Beta, _, _, Alpha, Beta).    % Otherwise bounds unchanged
+newbounds(_, Alpha, Beta, _, _, Alpha, Beta).   % Otherwise bounds unchanged
+
+
+%betterof( Pos, Val, Pos1, Val1, Pos, Val) :-                     % Pos better than Pos1
+betterof( PlayerColor, Board, Val, Board1, Val1, Board, Val) :-   % Pos better than Pos1
+	min_to_move( PlayerColor), Val > Val1, !
+	; % Or
+	max_to_move( PlayerColor), Val < Val1, !.
+
+
+%betterof( _, _, Pos1, Val1, Pos1, Val1).       % Otherwise Pos1 better
+betterof( _, _, _, Board1, Val1, Board1, Val1). % Otherwise Pos1 better
+
+% min = white 
+min_to_move(PlayerColor):- PlayerColor == white.
+
+% max = black 
+max_to_move(PlayerColor):- PlayerColor == black.
+
+
+% TODO
+% MinOrMax: Min = 0, Max = 1
+staticval(PlayerColor, MinOrMax, Board, Val):-
+    MinOrMax =:= 0, PlayerColor == white ->  
+        count_pieces(Board, '\u25cb', WhiteNumber),
+        count_pieces(Board, '\u25cf', BlackNumber),
+        Val is WhiteNumber - BlackNumber
+    ;
+    count_pieces(Board, '\u25cb', WhiteNumber),
+    count_pieces(Board, '\u25cf', BlackNumber),
+    Val is BlackNumber - WhiteNumber.
+
+
+test :-
+    Board = [
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '\u25cf', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.'],  
+            ['.', '\u25cf', '.', '\u25cf', '.', '.', '.', '.'], 
+            ['.', '.', '\u25cb', '.', '.', '.', '.', '.'],  
+            ['.', '.', '.', '.', '.', '.', '.', '.']   
+        ],
+    Board_size = 8,
+    PlayerColor = white,
+    print_checkers(Board, Board_size), nl,
+    Alpha = -9999,
+    Beta = 9999,
+    alphabeta( Board, Board_size, PlayerColor, Alpha, Beta, GoodBoard, Val),
+    print_checkers(GoodBoard, Board_size).
+    
