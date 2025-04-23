@@ -215,7 +215,7 @@ player_legal_moves(Board, Board_size, PlayerColor, LegalMoves, Forced) :-
             Forced = 0
         ).
 
-play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
+play(Board, Board_size, PlayerSymbol, LastX, LastY, 1) :-
     
     check_game_over(Board, Board_size, PlayerSymbol),
 
@@ -230,7 +230,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
         ;
         write("Incorrect input format, try again."), nl,
         sleep(2),
-        play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0)
+        play(Board, Board_size, PlayerSymbol, LastX, LastY, 1)
     ),
 
     % input validation
@@ -242,7 +242,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
         ) ->
             write("Invalid input. Try again..."), nl,
             sleep(2),
-            play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0), !
+            play(Board, Board_size, PlayerSymbol, LastX, LastY, 1), !
         ;
 
         % REGULAR MOVE PLAY
@@ -261,7 +261,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                     \+ is_move_forced_valid(X1, Y1, X2, Y2, PlayerForcedMoves) ->
                         write("Invalid move! Hint: You must capture a piece when able."), nl,
                         sleep(2),
-                        play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0), !
+                        play(Board, Board_size, PlayerSymbol, LastX, LastY, 1), !
                 ;
 
                     % perform capture
@@ -271,12 +271,12 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                     has_forced_move(AfterMoveBoard, Board_size, X2, Y2, ComboForcedMove),
                     (
                         ComboForcedMove \= [] ->
-                            play(AfterMoveBoard, Board_size, PlayerSymbol, X2, Y2, 1, 0)
+                            play(AfterMoveBoard, Board_size, PlayerSymbol, X2, Y2, 1)
                     ;
                         opponent_color(PlayerSymbol, OppColor),
                         %minimax(AfterMoveBoard, Board_size, OppColor, BoardBest, _),
                         alphabeta(AfterMoveBoard, Board_size, OppColor, OppColor, 3, -9999, 9999, GoodBoard, _),
-                        play(GoodBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
+                        play(GoodBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1)
                     )
                 )
 
@@ -287,10 +287,10 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                 opponent_color(PlayerSymbol, OppColor),
                 (
                     %minimax(MovedBoard, Board_size, OppColor, BoardBest, _)
-                    alphabeta(MovedBoard, Board_size, OppColor, OppColor, 3, -9999, 9999, GoodBoard, Val) ->
-                        play(GoodBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
+                    alphabeta(MovedBoard, Board_size, OppColor, OppColor, 3, -9999, 9999, GoodBoard, _) ->
+                        play(GoodBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1)
                 ),
-                play(MovedBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
+                play(MovedBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1)
             )
 
             ;
@@ -306,7 +306,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                 ) ->
                     write("Invalid input. Try again..."), nl,
                     sleep(2),
-                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0), !
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 1), !
                 ;
 
                 % check existing forced moves
@@ -319,21 +319,21 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                         has_forced_move(CapturedBoard, Board_size, X2, Y2, ComboForcedMoves),
                         (
                             ComboForcedMoves \= [] ->
-                                play(CapturedBoard, Board_size, PlayerSymbol, X2, Y2, 1, 0)
+                                play(CapturedBoard, Board_size, PlayerSymbol, X2, Y2, 1)
                         ;
                             opponent_symbol(PlayerSymbol, Opp),
-                            play(CapturedBoard, Board_size, Opp, Board_size, Board_size, 1, 0)
+                            play(CapturedBoard, Board_size, Opp, Board_size, Board_size, 1)
                         )
                 ;
                     write("Invalid move! Hint: You must capture a piece when able."), nl,
                     sleep(2),
-                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0), !
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 1), !
                 )
             )
         )
     ).
 
-play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
+play(Board, Board_size, PlayerSymbol, LastX, LastY, 0) :-
 
     check_game_over(Board, Board_size, PlayerSymbol),
     % console prints
@@ -347,7 +347,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
         ;
         write("Incorrect input format, try again."), nl,
         sleep(2),
-        play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0), !
+        play(Board, Board_size, PlayerSymbol, LastX, LastY, 0), !
     ),
 
     % input validation
@@ -359,7 +359,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
         ) ->
             write("Invalid input. Try again..."), nl,
             sleep(2),
-            play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0), !
+            play(Board, Board_size, PlayerSymbol, LastX, LastY, 0), !
         ;
 
         % REGULAR MOVE PLAY
@@ -378,7 +378,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
                     \+ is_move_forced_valid(X1, Y1, X2, Y2, PlayerForcedMoves) ->
                         write("Invalid move! Hint: You must capture a piece when able."), nl,
                         sleep(2),
-                        play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0), !
+                        play(Board, Board_size, PlayerSymbol, LastX, LastY, 0), !
                 ;
 
                     % perform capture
@@ -388,10 +388,10 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
                     has_forced_move(AfterMoveBoard, Board_size, X2, Y2, ComboForcedMove),
                     (
                         ComboForcedMove \= [] ->
-                            play(AfterMoveBoard, Board_size, PlayerSymbol, X2, Y2, 0, 0)
+                            play(AfterMoveBoard, Board_size, PlayerSymbol, X2, Y2, 0)
                     ;
                         opponent_symbol(PlayerSymbol, Opp),
-                        play(AfterMoveBoard, Board_size, Opp, Board_size, Board_size, 0, 0)
+                        play(AfterMoveBoard, Board_size, Opp, Board_size, Board_size, 0)
                     )
                 )
 
@@ -400,7 +400,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
                 % no forced moves - proceed with regular move
                 checkers_move(Board, X1, Y1, X2, Y2, MovedBoard),
                 opponent_symbol(PlayerSymbol, Opp),
-                play(MovedBoard, Board_size, Opp, Board_size, Board_size, 0, 0)
+                play(MovedBoard, Board_size, Opp, Board_size, Board_size, 0)
             )
 
             ;
@@ -416,7 +416,7 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
                 ) ->
                     write("Invalid input. Try again..."), nl,
                     sleep(2),
-                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0), !
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 0), !
                 ;
 
                 % check existing forced moves
@@ -429,15 +429,15 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0) :-
                         has_forced_move(CapturedBoard, Board_size, X2, Y2, ComboForcedMoves),
                         (
                             ComboForcedMoves \= [] ->
-                                play(CapturedBoard, Board_size, PlayerSymbol, X2, Y2, 0, 0)
+                                play(CapturedBoard, Board_size, PlayerSymbol, X2, Y2, 0)
                         ;
                             opponent_symbol(PlayerSymbol, Opp),
-                            play(CapturedBoard, Board_size, Opp, Board_size, Board_size, 0, 0)
+                            play(CapturedBoard, Board_size, Opp, Board_size, Board_size, 0)
                         )
                 ;
                     write("Invalid move! Hint: You must capture a piece when able."), nl,
                     sleep(2),
-                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 0, 0), !
+                    play(Board, Board_size, PlayerSymbol, LastX, LastY, 0), !
                 )
             )
         )
@@ -454,7 +454,7 @@ checkers(Board_size, Bot) :-
 
     % VERIFY IF PLAYING WITH BOT
 
-    play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, Bot, 0).
+    play(FilledBoard, Board_size, '\u25cb', Board_size, Board_size, Bot).
 
 chain_captures(Board, Board_size, X, Y, _, [Board]) :-
     has_forced_move(Board, Board_size, X, Y, ForcedMoves),
@@ -506,7 +506,7 @@ generate_boards_from_moves(Board, Board_size, [[XI, YI, Moves] | Tail], [AllChai
     ),
     generate_boards_from_moves(Board, Board_size, Tail, Boards).
     
-moves(BoardIn, Board_size, Player_color, Depth, Return) :-
+moves(BoardIn, Board_size, Player_color, Return) :-
     player_legal_moves(BoardIn, Board_size, Player_color, LegalMoves, Forced),
     count_color(BoardIn, Player_color, N),
     opponent_color(Player_color, OppColor),
@@ -631,12 +631,11 @@ check_game_over(Board, Board_size, PlayerSymbol) :-
 alphabeta( Board, Board_size, PlayerColor, PlayerMax, Depth, Alpha, Beta, GoodBoard, Val) :-
     (
         Depth >= 0 ->
-
-            moves(Board, Board_size, PlayerColor, Depth, BoardList), !,
+            moves(Board, Board_size, PlayerColor, BoardList), !,
             NewDepth is Depth - 1,
             boundedbest( BoardList, Board_size, PlayerColor, PlayerMax, NewDepth, Alpha, Beta, GoodBoard, Val)
             ; % Or                       
-            staticval(PlayerColor, PlayerMax, Board, Val)       % Static value of Pos
+            staticval(PlayerColor, PlayerMax, Board, Val)       % Static value of Board
     ).
     
 boundedbest( [Board | BoardList], Board_size, PlayerColor, PlayerMax, Depth, Alpha, Beta, GoodBoard, GoodVal) :-
@@ -646,7 +645,7 @@ boundedbest( [Board | BoardList], Board_size, PlayerColor, PlayerMax, Depth, Alp
 
 goodenough( [], _, _, _, _, _, _, Board, Val, Board, Val) :- !.     % No other candidate
 
-goodenough( _, _, PlayerColor, PlayerMax, Depth, Alpha, Beta, Board, Val, Board, Val) :-
+goodenough( _, _, PlayerColor, PlayerMax, _, Alpha, Beta, Board, Val, Board, Val) :-
 	min_to_move( PlayerColor, PlayerMax), Val > Beta, !   % Maximizer attained upper bound
 	; % Or
 	max_to_move( PlayerColor, PlayerMax), Val < Alpha, !. % Minimizer attained lower bound
@@ -656,20 +655,20 @@ goodenough( BoardList, Board_size, PlayerColor, PlayerMax, Depth, Alpha, Beta, B
 	boundedbest( BoardList, Board_size, PlayerColor, PlayerMax, Depth, NewAlpha, NewBeta, Board1, Val1),
 	betterof( PlayerColor, PlayerMax, Board, Val, Board1, Val1, GoodBoard, GoodVal).      % Refine bounds
 
-newbounds( PlayerColor, PlayerMax, Alpha, Beta, Board, Val, Val, Beta) :-
+newbounds( PlayerColor, PlayerMax, Alpha, Beta, _, Val, Val, Beta) :-
 	min_to_move( PlayerColor, PlayerMax), Val > Alpha, !.         % Maximizer increased lower bound
 
-newbounds( PlayerColor, PlayerMax, Alpha, Beta, Board, Val, Alpha, Val) :-
+newbounds( PlayerColor, PlayerMax, Alpha, Beta, _, Val, Alpha, Val) :-
 	max_to_move( PlayerColor, PlayerMax), Val < Beta, !.          % Minimizer decreased upper bound
 	
 newbounds(_, _, Alpha, Beta, _, _, Alpha, Beta).   % Otherwise bounds unchanged
 
-betterof( PlayerColor, PlayerMax, Board, Val, Board1, Val1, Board, Val) :-   % Board better than Board1
+betterof( PlayerColor, PlayerMax, Board, Val, _, Val1, Board, Val) :-   % Board better than Board1
 	min_to_move( PlayerColor, PlayerMax), Val > Val1, !
 	; % Or
 	max_to_move( PlayerColor, PlayerMax), Val < Val1, !.
 
-betterof( _, _, _, _, Board1, Val1, Board1, Val1). % Otherwise Pos1 better
+betterof( _, _, _, _, Board1, Val1, Board1, Val1). % Otherwise Board1 better
 
 min_to_move(PlayerColor, PlayerMax):- PlayerColor == PlayerMax.
 
