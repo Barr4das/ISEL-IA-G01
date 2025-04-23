@@ -279,9 +279,10 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                     ;
                         opponent_color(PlayerSymbol, OppColor),
                         %minimax(AfterMoveBoard, Board_size, OppColor, BoardBest, _),
-                        %alpha_beta(BoardIn, Board_size, Player_color, Alpha, Beta, GoodBoard, Val)
-                        alpha_beta(AfterMoveBoard, Board_size, OppColor, -9999, 9999, GoodBoard, _),
-                        play(BoardBest, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
+                        %alphabeta( Board, Board_size, PlayerColor, PlayerMax, Alpha, Beta, GoodBoard, Val)
+                        write("1 - OppColor is "), write(OppColor), nl,
+                        alphabeta(AfterMoveBoard, Board_size, OppColor, OppColor, -9999, 9999, GoodBoard, _),
+                        play(GoodBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
                     )
                 )
 
@@ -292,8 +293,11 @@ play(Board, Board_size, PlayerSymbol, LastX, LastY, 1, 0) :-
                 opponent_color(PlayerSymbol, OppColor),
                 (
                     %minimax(MovedBoard, Board_size, OppColor, BoardBest, _)
-                    alpha_beta(MovedBoard, Board_size, OppColor, -9999, 9999, GoodBoard, _) ->
-                        play(BoardBest, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
+                    write("2 - Color is "), write(Color), nl,
+                    write("2 - OppColor is "), write(OppColor), nl,
+                    alphabeta(MovedBoard, Board_size, OppColor, OppColor, -9999, 9999, GoodBoard, Val) ->
+                        write("2 - Val is "), write(Val), nl,
+                        play(GoodBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
                 ),
                 play(MovedBoard, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0)
             )
@@ -585,7 +589,7 @@ betterof(Player_color, Board0, Val0, _, Val1, Board0, Val0) :-
         Val0 < Val1, !;
     Val1 < Val0, !.
 
-betterof( _, _, _, Pos1, Val1, Pos1, Val1).
+betterof( _, _, _, Board1, Val1, Board1, Val1).
 
 staticval(Player_color, Board, Val) :-
     Player_color == white ->  
@@ -717,7 +721,7 @@ test15 :-
 
 
 /**
-alpha_beta(BoardIn, Board_size, Player_color, Alpha, Beta, GoodBoard, Val) :-
+alphabeta(BoardIn, Board_size, Player_color, Alpha, Beta, GoodBoard, Val) :-
     moves(BoardIn, Board_size, Player_color, PosList), !,
     bounded_best(PosList, Board_size, Player_color, Alpha, Beta, GoodBoard, Val)
     ;
@@ -725,7 +729,7 @@ alpha_beta(BoardIn, Board_size, Player_color, Alpha, Beta, GoodBoard, Val) :-
 
 %best( [Board1 | BoardList ], Board_size, Player_color, BestBoard, BestVal )
 bounded_best( [Board1 | BoardList], Board_size, Player_color, Alpha, Beta, GoodBoard, GoodVal) :-
-    alpha_beta(Board1, Board_size, Player_color, Alpha, Beta, GoodBoard, Val),
+    alphabeta(Board1, Board_size, Player_color, Alpha, Beta, GoodBoard, Val),
     good_enough(BoardList, Board_size, Player_color, Alpha, Beta, Board1, Val, GoodBoard, GoodVal).
 
 good_enough( [], _, _, _, _, Board, Val, Board, Val) :- !.
@@ -756,96 +760,99 @@ better_of(Board, Player_color, Val, NewBoard, NewVal, GoodBoard, GoodVal) :-
 
 better_of(_, _, _, NewBoard, NewVal, NewBoard, NewVal).
 
-
-test16 :-
-Board_size = 4,
-    generate_empty_board(Board, Board_size),
-    fill_board(Board, 1, 0, Result),
-    play(Result, Board_size, '\u25cb', Board_size, Board_size, 1, 0).
 */
 
 %alphabeta( Pos, Alpha, Beta, GoodPos, Val) :-
-alphabeta( Board, Board_size, PlayerColor, Alpha, Beta, GoodBoard, Val) :-
+alphabeta( Board, Board_size, PlayerColor, PlayerMax, Alpha, Beta, GoodBoard, Val) :-
 	%moves( Pos, PosList), !,
     moves(Board, Board_size, PlayerColor, BoardList), !,
     %boundedbest( PosList, Alpha, Beta, GoodPos, Val)
-	boundedbest( BoardList, Board_size, PlayerColor, Alpha, Beta, GoodBoard, Val)
+	boundedbest( BoardList, Board_size, PlayerColor, PlayerMax, Alpha, Beta, GoodBoard, Val)
 	; % Or
-	%staticval( Pos, Val).                   % Static value of Pos
-    staticval(PlayerColor, Board, Val).     % Static value of Pos
+	%staticval( Pos, Val).                             % Static value of Pos                         
+    staticval(PlayerColor, PlayerMax, Board, Val).     % Static value of Pos
 	
 %boundedbest( [Pos | PosList], Alpha, Beta, GoodPos, GoodVal) :-
-boundedbest( [Board | BoardList], Board_size, PlayerColor, Alpha, Beta, GoodBoard, GoodVal) :-
+boundedbest( [Board | BoardList], Board_size, PlayerColor, PlayerMax, Alpha, Beta, GoodBoard, GoodVal) :-
 	%alphabeta( Board, Alpha, Beta, _, Val),
     opponent_color(PlayerColor, OppColor),
-    alphabeta( Board, Board_size, OppColor, Alpha, Beta, _, Val),
+    alphabeta( Board, Board_size, OppColor, PlayerMax, Alpha, Beta, _, Val),
     %goodenough( PosList, Alpha, Beta, Pos, Val, GoodPos, GoodVal).
-	goodenough( BoardList, Board_size, PlayerColor, Alpha, Beta, Board, Val, GoodBoard, GoodVal).
+	goodenough( BoardList, Board_size, PlayerColor, PlayerMax, Alpha, Beta, Board, Val, GoodBoard, GoodVal).
 
 
 %goodenough( [], _, _, Pos, Val, Pos, Val) :- !.        % No other candidate
-goodenough( [], _, _, _, _, Board, Val, Board, Val) :- !.     % No other candidate
+goodenough( [], _, _, _, _, _, Board, Val, Board, Val) :- !.     % No other candidate
 
 
 %goodenough( _, Alpha, Beta, Pos, Val, Pos, Val) :-
-goodenough( _, _, PlayerColor, Alpha, Beta, Board, Val, Board, Val) :-
-	min_to_move( PlayerColor), Val > Beta, !   % Maximizer attained upper bound
+goodenough( _, _, PlayerColor, PlayerMax, Alpha, Beta, Board, Val, Board, Val) :-
+	min_to_move( PlayerColor, PlayerMax), Val > Beta, !   % Maximizer attained upper bound
 	; % Or
-	max_to_move( PlayerColor), Val < Alpha, !. % Minimizer attained lower bound
+	max_to_move( PlayerColor, PlayerMax), Val < Alpha, !. % Minimizer attained lower bound
 
 
 %goodenough( PosList, Alpha, Beta, Pos, Val, GoodPos, GoodVal) :-
-goodenough( BoardList, Board_size, PlayerColor, Alpha, Beta, Board, Val, GoodBoard, GoodVal) :-
+goodenough( BoardList, Board_size, PlayerColor, PlayerMax, Alpha, Beta, Board, Val, GoodBoard, GoodVal) :-
 	%newbounds( Alpha, Beta, Pos, Val, NewAlpha, NewBeta),      % Refine bounds
-    newbounds( PlayerColor, Alpha, Beta, Board, Val, NewAlpha, NewBeta),
+    newbounds( PlayerColor, PlayerMax, Alpha, Beta, Board, Val, NewAlpha, NewBeta),
     %boundedbest( PosList, NewAlpha, NewBeta, Pos1, Val1),
-	boundedbest( BoardList, Board_size, PlayerColor, NewAlpha, NewBeta, Pos1, Val1),
+	boundedbest( BoardList, Board_size, PlayerColor, PlayerMax, NewAlpha, NewBeta, Board1, Val1),
     %betterof( Pos, Val, Pos1, Val1, GoodPos, GoodVal).         % Refine bounds
-	betterof( PlayerColor, Board, Val, Pos1, Val1, GoodBoard, GoodVal).      % Refine bounds
+	betterof( PlayerColor, PlayerMax, Board, Val, Board1, Val1, GoodBoard, GoodVal).      % Refine bounds
 
 
 %newbounds( Alpha, Beta, Pos, Val, Val, Beta) :-
-newbounds( PlayerColor, Alpha, Beta, Board, Val, Val, Beta) :-
-	min_to_move( PlayerColor), Val > Alpha, !.         % Maximizer increased lower bound
+newbounds( PlayerColor, PlayerMax, Alpha, Beta, Board, Val, Val, Beta) :-
+	min_to_move( PlayerColor, PlayerMax), Val > Alpha, !.         % Maximizer increased lower bound
 
 
 %newbounds( Alpha, Beta, Pos, Val, Alpha, Val) :-
-newbounds( PlayerColor, Alpha, Beta, Board, Val, Alpha, Val) :-
-	max_to_move( PlayerColor), Val < Beta, !.          % Minimizer decreased upper bound
+newbounds( PlayerColor, PlayerMax, Alpha, Beta, Board, Val, Alpha, Val) :-
+	max_to_move( PlayerColor, PlayerMax), Val < Beta, !.          % Minimizer decreased upper bound
 	
 	
 %newbounds( Alpha, Beta, _, _, Alpha, Beta).    % Otherwise bounds unchanged
-newbounds(_, Alpha, Beta, _, _, Alpha, Beta).   % Otherwise bounds unchanged
+newbounds(_, _, Alpha, Beta, _, _, Alpha, Beta).   % Otherwise bounds unchanged
 
 
 %betterof( Pos, Val, Pos1, Val1, Pos, Val) :-                     % Pos better than Pos1
-betterof( PlayerColor, Board, Val, Board1, Val1, Board, Val) :-   % Pos better than Pos1
-	min_to_move( PlayerColor), Val > Val1, !
+betterof( PlayerColor, PlayerMax, Board, Val, Board1, Val1, Board, Val) :-   % Pos better than Pos1
+	min_to_move( PlayerColor, PlayerMax), Val > Val1, !
 	; % Or
-	max_to_move( PlayerColor), Val < Val1, !.
+	max_to_move( PlayerColor, PlayerMax), Val < Val1, !.
 
 
 %betterof( _, _, Pos1, Val1, Pos1, Val1).       % Otherwise Pos1 better
-betterof( _, _, _, Board1, Val1, Board1, Val1). % Otherwise Pos1 better
+betterof( _, _, _, _, Board1, Val1, Board1, Val1). % Otherwise Pos1 better
 
-% min = white 
-min_to_move(PlayerColor):- PlayerColor == white.
+min_to_move(PlayerColor, PlayerMax):- PlayerColor == PlayerMax.
 
-% max = black 
-max_to_move(PlayerColor):- PlayerColor == black.
+max_to_move(PlayerColor, PlayerMax):- PlayerColor \= PlayerMax.
 
 
-% TODO
-% MinOrMax: Min = 0, Max = 1
-staticval(PlayerColor, MinOrMax, Board, Val):-
-    MinOrMax =:= 0, PlayerColor == white ->  
-        count_pieces(Board, '\u25cb', WhiteNumber),
-        count_pieces(Board, '\u25cf', BlackNumber),
-        Val is WhiteNumber - BlackNumber
-    ;
+
+staticval(PlayerColor, PlayerMax, Board, Val) :-
+    write(PlayerColor), write("  "), 
     count_pieces(Board, '\u25cb', WhiteNumber),
     count_pieces(Board, '\u25cf', BlackNumber),
-    Val is BlackNumber - WhiteNumber.
+    (  
+        PlayerMax == PlayerColor, PlayerColor == white ->
+            Val is WhiteNumber - BlackNumber,
+            write("case 1 Val is "), write(Val), nl
+        ; 
+        PlayerMax == PlayerColor, PlayerColor == black ->
+            Val is BlackNumber - WhiteNumber ,
+            write("case 2 Val is "), write(Val), nl
+        ;  
+        PlayerColor == white ->
+            Val is BlackNumber - WhiteNumber,
+            write("case 3 Val is "), write(Val), nl
+        ;  
+        PlayerColor == black ->
+            Val is WhiteNumber - BlackNumber,
+            write("case 4 Val is "), write(Val), nl
+    ).
 
 
 test :-
@@ -853,7 +860,7 @@ test :-
             ['.', '.', '.', '.', '.', '.', '.', '.'],  
             ['.', '.', '.', '.', '.', '.', '.', '.'],  
             ['.', '.', '.', '.', '.', '.', '.', '.'],  
-            ['.', '.', '.', '.', '.', '\u25cf', '.', '.'],  
+            ['.', '.', '.', '\u25cf', '.', '\u25cf', '.', '.'],  
             ['.', '.', '.', '.', '.', '.', '.', '.'],  
             ['.', '\u25cf', '.', '\u25cf', '.', '.', '.', '.'], 
             ['.', '.', '\u25cb', '.', '.', '.', '.', '.'],  
@@ -864,6 +871,14 @@ test :-
     print_checkers(Board, Board_size), nl,
     Alpha = -9999,
     Beta = 9999,
-    alphabeta( Board, Board_size, PlayerColor, Alpha, Beta, GoodBoard, Val),
+    alphabeta( Board, Board_size, PlayerColor, PlayerColor, Alpha, Beta, GoodBoard, Val),
     print_checkers(GoodBoard, Board_size).
+
+test16 :-
+    Board_size = 8,
+    PlayerSymbol = '\u25cb',
+    generate_empty_board(Board, Board_size),
+    fill_board(Board, 3, 0, Result),
+    %print_checkers(Result, Board_size),
+    play(Result, Board_size, PlayerSymbol, Board_size, Board_size, 1, 0).
     
