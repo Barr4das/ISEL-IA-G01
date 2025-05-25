@@ -13,13 +13,22 @@ example_level_2(
     [
         ['#','#','#','#','#','#','#','#'],
         ['#','#','#',' ',' ',' ','#','#'],
-        ['#','.', '@', '$', ' ', ' ', '#', '#'],
-        ['#', '#', '#', ' ', '$', '.', '#','#'],
-        ['#','.', '#', '#', '$', ' ', '#','#'],
-        ['#', ' ', '#', ' ', '.', ' ', '#', '#'],
-        ['#', '$', ' ', '*', '$', '$', '.', '#'],
-        ['#', ' ', ' ', ' ', '.', ' ', ' ', '#'],
-        ['#', '#', '#', '#', '#', '#', '#', '#']
+        ['#','#','@','$',' ','.','#','#'],
+        ['#','#','#',' ','$','.','#','#']
+    ]
+).
+
+example_level_3(
+    [
+        ['#','#','#','#','#','#','#','#'],
+        ['#','#','#',' ',' ',' ','#','#'],
+        ['#','.','@','$',' ',' ','#','#'],
+        ['#','#','#',' ','$','.','#','#'],
+        ['#','.','#','#','$',' ','#','#'],
+        ['#',' ','#',' ','.',' ','#','#'],
+        ['#','$',' ','*','$','$','.','#'],
+        ['#',' ',' ',' ','.',' ',' ','#'],
+        ['#','#','#','#','#','#','#','#']
     ]
 ).
 
@@ -115,18 +124,6 @@ update_board_after_push(CurrentBoard, PRow, PCol, BRow, BCol, NBRow, NBCol, Next
 s(Map, Out, 1) :-
     find_player(Map, PRow, PCol),
     (
-        (DR, DC) = (-1, 0), can_move_player(Map, PRow, PCol, DR, DC, NPRow, NPCol),
-        update_board_after_move(Map, PRow, PCol, NPRow, NPCol, Out)
-    ;
-        (DR, DC) = (1, 0), can_move_player(Map, PRow, PCol, DR, DC, NPRow, NPCol),
-        update_board_after_move(Map, PRow, PCol, NPRow, NPCol, Out)
-    ;
-        (DR, DC) = (0, -1), can_move_player(Map, PRow, PCol, DR, DC, NPRow, NPCol),
-        update_board_after_move(Map, PRow, PCol, NPRow, NPCol, Out)
-    ;
-        (DR, DC) = (0, 1), can_move_player(Map, PRow, PCol, DR, DC, NPRow, NPCol),
-        update_board_after_move(Map, PRow, PCol, NPRow, NPCol, Out)
-    ;
         (DR, DC) = (-1, 0), can_push_box(Map, PRow, PCol, DR, DC, BRow, BCol, NBRow, NBCol),
         update_board_after_push(Map, PRow, PCol, BRow, BCol, NBRow, NBCol, Out)
     ;
@@ -138,11 +135,19 @@ s(Map, Out, 1) :-
     ;
         (DR, DC) = (0, 1), can_push_box(Map, PRow, PCol, DR, DC, BRow, BCol, NBRow, NBCol),
         update_board_after_push(Map, PRow, PCol, BRow, BCol, NBRow, NBCol, Out)
+    ;
+        (DR, DC) = (-1, 0), can_move_player(Map, PRow, PCol, DR, DC, NPRow, NPCol),
+        update_board_after_move(Map, PRow, PCol, NPRow, NPCol, Out)
+    ;
+        (DR, DC) = (1, 0), can_move_player(Map, PRow, PCol, DR, DC, NPRow, NPCol),
+        update_board_after_move(Map, PRow, PCol, NPRow, NPCol, Out)
+    ;
+        (DR, DC) = (0, -1), can_move_player(Map, PRow, PCol, DR, DC, NPRow, NPCol),
+        update_board_after_move(Map, PRow, PCol, NPRow, NPCol, Out)
+    ;
+        (DR, DC) = (0, 1), can_move_player(Map, PRow, PCol, DR, DC, NPRow, NPCol),
+        update_board_after_move(Map, PRow, PCol, NPRow, NPCol, Out)
     ).
-
-expand(P, l( N, _), _, _, yes, [N | P]) :-
-    goal(N).
-
 
 succlist(_, [], []).
 
@@ -152,6 +157,9 @@ succlist( GO, [N/C | NCs], Ts) :-
 	F is G + H,
 	succlist( GO, NCs, Ts1),
 	insert( l(N, F/G), Ts1, Ts).
+
+expand(P, l( N, _), _, _, yes, [N | P]) :-
+    goal(N).
 
 expand(P, l(N, F/G), Bound, Tree1, Solved, Sol):-
     F =< Bound,
@@ -187,5 +195,13 @@ print_map([Head | Tail]):-
 test4 :-
     example_level_2(Level),
     print_map(Level),
-    s(Level, LevelOut, 1),
-    print_map(LevelOut).
+    write('\n'),
+    s(Level, LevelOut1, 1),
+    print_map(LevelOut1),
+    write('\n'),
+    s(LevelOut1, LevelOut2, 1),
+    print_map(LevelOut2),
+    write('\n'),
+    s(LevelOut2, LevelOut3, 1),
+    print_map(LevelOut3),
+    write('\n').
