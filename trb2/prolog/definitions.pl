@@ -10,7 +10,9 @@
     score/1,
     floor/1,
     is_not_over/1,
-    box/1  
+    box/1,  
+    player_at/2,
+    box_at/2
 ]).
 
 wall('#').
@@ -26,3 +28,6 @@ box('*').
 
 is_not_over('.').
 is_not_over('+').
+
+player_at(X, Y).
+box_at(X, Y).

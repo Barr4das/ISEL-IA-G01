@@ -3,9 +3,9 @@
 
 example_level_1(
     [
-        ['#','#','#','#','#'],
+        ['#','#','#','#','#','#'],
         ['#', '@', '$', '.', '#'],
-        ['#','#','#','#','#']
+        ['#','#','#','#','#','#']
     ]
 ).
 
@@ -33,25 +33,10 @@ example_level_3(
     ]
 ).
 
-is_row_over([]).
-is_row_over([Map_Tile_Head | Map_Tile_Tail]) :-
-    \+ is_not_over(Map_Tile_Head),
-    is_row_over(Map_Tile_Tail).
-
-goal([]).
-goal([Map_Head | Map_Tail]):-
-    is_row_over(Map_Head),
-    goal(Map_Tail).
-
-bestfirst(Start, Solution) :-
-    expand([], l(Start, 0/0), 9999, _, yes, Solution).
-
-find_player([RowHead | _], 0, PlayerCol) :-
-    find_player_in_row(RowHead, 0, PlayerCol).
-
-find_player([_ | TailBoard], PlayerRow, PlayerCol) :-
-    find_player(TailBoard, TempRow, PlayerCol),
-    PlayerRow is TempRow + 1.
+/*
+** Row = Y, Col = X
+** X = Col, Y = Row
+*/
 
 find_player_in_row([Tile | _], CurrentColIndex, CurrentColIndex) :-
     player(Tile).
@@ -60,10 +45,103 @@ find_player_in_row([_ | TailRow], CurrentColIndex, PlayerCol) :-
     NextColIndex is CurrentColIndex + 1,
     find_player_in_row(TailRow, NextColIndex, PlayerCol).
 
-get_tile(Board, Row, Col, Tile) :-
-    nth0(Row, Board, BoardRow),
-    nth0(Col, BoardRow, Tile).
+find_player([RowHead | _], 0, PlayerCol) :-
+    find_player_in_row(RowHead, 0, PlayerCol).
 
+find_player([_ | TailBoard], PlayerRow, PlayerCol) :-
+    find_player(TailBoard, TempRow, PlayerCol),
+    PlayerRow is TempRow + 1.
+
+find_boxes_in_row([], _, _, []).
+
+find_boxes_in_row([Tile | RestTiles], Row, Col, [(Row, Col) | BoxCoords]) :-
+    box(Tile),
+    NextCol is Col + 1,
+    find_boxes_in_row(RestTiles, Row, NextCol, BoxCoords).
+
+find_boxes_in_row([_ | RestTiles], Row, Col, BoxCoords) :-
+    NextCol is Col + 1,
+    find_boxes_in_row(RestTiles, Row, NextCol, BoxCoords).
+
+find_boxes([], _, []).
+
+find_boxes([GameMapHead | GameMapTail], CurrRow, Boxes) :-
+    find_boxes_in_row(GameMapHead, CurrRow, 0, SomeBoxes),          
+    NextRow is CurrRow + 1,
+    find_boxes(GameMapTail, NextRow, RemainingBoxes),        
+    append(SomeBoxes, RemainingBoxes, Boxes).
+
+get_boxes_state([], _).
+
+get_boxes_state([], []).
+
+get_boxes_state([(BRow, BCol) | RestBoxes], [box_at(BCol, BRow) | BoxCoords]) :-
+    get_boxes_state(RestBoxes, BoxCoords).
+
+get_state(Player, Boxes, [Player | StateBoxes]) :-
+    get_boxes_state(Boxes, StateBoxes).  
+
+replace_nth0(Index, List, NewElement, NewList) :-
+    length(List, Len),
+    Index >= 0,
+    Index < Len,
+    (   Index = 0 ->
+        List = [_|Tail], NewList = [NewElement|Tail]
+    ;   List = [Head|Rest],
+        NextIndex is Index - 1,
+        NewList = [Head|NewTail],
+        replace_nth0(NextIndex, Rest, NewElement, NewTail)
+    ).
+
+replace_tile(OldBoard, X, Y, NewTile, NewBoard) :-
+    nth0(Y, OldBoard, OldY, TempBoard),
+    replace_nth0(X, OldY, NewTile, NewY),
+    nth0(Y, NewBoard, NewY, TempBoard).
+
+get_tile(Board, X, Y, Tile) :-
+    nth0(Y, Board, BoardRow),
+    nth0(X, BoardRow, Tile).
+
+get_board(Board, [], Board).
+
+get_board(OldBoard, [player_at(X, Y) | Rest], NewBoard) :-
+    get_tile(OldBoard, X, Y, Tile),
+    (
+        player(Tile) = player('@'),
+        replace_tile(OldBoard, X, Y, ' ', AfterBoard)
+    ;
+        player(Tile) = player('+'),
+        replace_tile(OldBoard, X, Y, '.', AfterBoard)
+    ),
+    get_board(AfterBoard, Rest, NewBoard).
+
+get_board(OldBoard, [box_at(X, Y) | Rest], NewBoard) :-
+    get_tile(OldBoard, X, Y, Tile),
+    (
+        box(Tile) = box('$'),
+        replace_tile(OldBoard, X, Y, ' ', AfterBoard)
+    ;
+        box(Tile) = box('*'),
+        replace_tile(OldBoard, X, Y, '.', AfterBoard)
+    ),
+    get_board(AfterBoard, Rest, NewBoard).
+
+map_loader(GameMap, State, Board) :-
+    find_player(GameMap, Col, Row),
+    find_boxes(GameMap, 0, Boxes),
+    get_state(player_at(Row, Col), Boxes, State),
+    get_board(GameMap, State, Board).
+ 
+/*
+find_boxes([GameMapHead | GameMapTail], CurrRow, Boxes) :-
+    find_box_in_row(GameMapHead, CurrRow, 0, Box),
+    NewBoxes is [Boxes | Box],
+    append(Boxes, Box, NewBoxes),
+    NewRow is CurrRow + 1.
+    find_boxes(GameMapTail, NewRow, NewBoxes). 
+*/        
+
+/*
 replace_tile(OldBoard, Row, Col, NewTile, NewBoard) :-
     nth0(Row, OldBoard, OldRow, TempBoard),
     replace_nth0(Col, OldRow, NewTile, NewRow),
@@ -81,6 +159,10 @@ replace_nth0(Index, List, NewElement, NewList) :-
         replace_nth0(NextIndex, Rest, NewElement, NewTail)
     ).
 
+get_tile(Board, Row, Col, Tile) :-
+    nth0(Row, Board, BoardRow),
+    nth0(Col, BoardRow, Tile).
+
 can_move_player(CurrentBoard, PRow, PCol, DR, DC, NPRow, NPCol) :-
     NPRow is PRow + DR,
     NPCol is PCol + DC,
@@ -92,7 +174,6 @@ can_push_box(CurrentBoard, PRow, PCol, DR, DC, BRow, BCol, NBRow, NBCol) :-
     BCol is PCol + DC,
     get_tile(CurrentBoard, BRow, BCol, BoxTile),
     (box(BoxTile) ; score(BoxTile)),
-
     NBRow is BRow + DR,
     NBCol is BCol + DC,
     get_tile(CurrentBoard, NBRow, NBCol, TargetTile),
@@ -150,6 +231,16 @@ s(Map, Out, 1) :-
         update_board_after_move(Map, PRow, PCol, NPRow, NPCol, Out)
     ).
 
+is_row_over([]).
+is_row_over([Map_Tile_Head | Map_Tile_Tail]) :-
+    \+ is_not_over(Map_Tile_Head),
+    is_row_over(Map_Tile_Tail).
+
+goal([]).
+goal([Map_Head | Map_Tail]):-
+    is_row_over(Map_Head),
+    goal(Map_Tail).
+
 succlist(_, [], []).
 
 succlist( GO, [N/C | NCs], Ts) :-
@@ -174,24 +265,14 @@ expand(P, l(N, F/G), Bound, Tree1, Solved, Sol):-
         Solved = never
     ).
 
+bestfirst(Start, Solution) :-
+    expand([], l(Start, 0/0), 9999, _, yes, Solution).
+
 print_coordinates(X, Y) :-
     write("X: "),
     write(X),
     write("\nY: "),
     write(Y).
-
-print_list([]).
-print_list([Head | Tail]) :-
-    write(Head),
-    print_list(Tail).
-
-print_map([]).
-
-print_map([Head | Tail]):-
-    print_list(Head),
-    write('\n'),
-    print_map(Tail).
-    
 
 test4 :-
     example_level_2(Level),
@@ -205,4 +286,30 @@ test4 :-
     write('\n'),
     s(LevelOut2, LevelOut3, 1),
     print_map(LevelOut3),
+    write('\n').
+*/
+
+
+print_list([]).
+print_list([Head | Tail]) :-
+    write(Head),
+    print_list(Tail).
+    
+print_map([]).
+
+print_map([Head | Tail]):-
+    print_list(Head),
+    write('\n'),
+    print_map(Tail).
+
+test5:-
+    example_level_3(GameMap),
+    print_map(GameMap),
+    write('\n'),
+    %trace,
+    map_loader(GameMap, State, Board),
+    write('State = '), print_list(State),
+    write('\n'),
+    write('\n'),
+    print_map(Board),
     write('\n').
