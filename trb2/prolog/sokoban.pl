@@ -126,11 +126,49 @@ get_board(OldBoard, [box_at(X, Y) | Rest], NewBoard) :-
     ),
     get_board(AfterBoard, Rest, NewBoard).
 
+%            In       Out   Out
 map_loader(GameMap, State, Board) :-
     find_player(GameMap, Col, Row),
     find_boxes(GameMap, 0, Boxes),
     get_state(player_at(Row, Col), Boxes, State),
     get_board(GameMap, State, Board).
+
+print_coordinates(X, Y) :-
+    write("X: "),
+    write(X),
+    write("\nY: "),
+    write(Y).
+
+m(MoveX, MoveY, [player_at(X, Y) | Boxes], [NewPlayer | NewBoxes]):-
+    NewX is X + MoveX,
+    NewY is Y + MoveY,
+    TempPlayer = player_at(NewX, NewY),
+    (
+        % Move without pushing box
+        % Boxes needs to be a list of position not states
+        \+ member(NewPlayer, Boxes),
+        NewPlayer = TempPlayer,
+        NewBoxes = Boxes
+    ;
+        % Push box
+        member(TempPlayer, Boxes),
+        B2X is NX + DX,
+        B2Y is NY + DY,
+        B2 = (B2X, B2Y),
+        \+ wall(B2),
+        \+ member(B2, Boxes),
+        select(TempPlayer, Boxes, RestBoxes),
+        NewBoxes = [B2 | RestBoxes],
+        NewPlayer = TempPlayer
+    ).
+   
+
+%   In       Out    C (cost)
+s(StateIn, StateOut, 1):-
+    dir(_, (X, Y))
+    m(X, Y, StateIn, StateOut).
+
+
  
 /*
 find_boxes([GameMapHead | GameMapTail], CurrRow, Boxes) :-
@@ -312,4 +350,11 @@ test5:-
     write('\n'),
     write('\n'),
     print_map(Board),
+    write('\n').
+
+test6:-
+    example_level_3(GameMap),
+    map_loader(GameMap, State, Board),
+    s(State, Board, StateOut, 1),
+    print_map(StateOut),
     write('\n').
