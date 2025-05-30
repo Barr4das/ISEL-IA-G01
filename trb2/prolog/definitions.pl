@@ -29,5 +29,5 @@ box('*').
 is_not_over('.').
 is_not_over('+').
 
-player_at(X, Y).
-box_at(X, Y).
+player_at(_X, _Y).
+box_at(_X, _Y).
