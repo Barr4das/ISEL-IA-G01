@@ -6,7 +6,7 @@
 :- module(definitions, [
     wall/1,
     player/1,
-    objective/1,
+    goal/1,
     score/1,
     floor/1,
     is_not_over/1,
@@ -19,9 +19,9 @@
 wall('#').
 player('@').
 player('+').
-objective('+').
-objective('.').
-objective('*').
+goal('+').
+goal('.').
+goal('*').
 score('*').
 floor(' ').
 box('$').
