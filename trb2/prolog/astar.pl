@@ -31,6 +31,7 @@ totdist([box_at(X, Y) | RestBoxes], TotalDist) :-
 
 % Simple corner penalty: box not on goal and in a corner
 seq([], 0).
+
 seq([box_at(X, Y) | Rest], Score) :-
     (
         \+ goal_at(X, Y),
