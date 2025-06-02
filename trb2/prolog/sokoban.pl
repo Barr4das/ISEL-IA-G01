@@ -1,5 +1,6 @@
 
 :- use_module('definitions').
+:- use_module('prints').
 
 example_level_1(
     [
@@ -11,6 +12,15 @@ example_level_1(
 
 example_level_2(
     [
+        ['#','#','#','#','#','#'],
+        ['#',' ','$',' ','.','#'],
+        ['#','@',' ',' ',' ','#'],
+        ['#','#','#','#','#','#']
+    ]
+).
+
+example_level_3(
+    [
         ['#','#','#','#','#','#','#','#'],
         ['#','#','#',' ',' ',' ','#','#'],
         ['#',' ','@','$',' ','.','#','#'],
@@ -19,7 +29,7 @@ example_level_2(
     ]
 ).
 
-example_level_3(
+example_level_4(
     [
         ['#','#','#','#','#','#','#','#'],
         ['#','#','#',' ',' ',' ','#','#'],
@@ -39,7 +49,7 @@ example_level_3(
 */
 
 find_player_in_row([Tile | _], CurrentColIndex, CurrentColIndex) :-
-    player(Tile).
+    player_symbol(Tile).
 
 find_player_in_row([_ | TailRow], CurrentColIndex, PlayerCol) :-
     NextColIndex is CurrentColIndex + 1,
@@ -55,7 +65,7 @@ find_player([_ | TailBoard], PlayerRow, PlayerCol) :-
 find_boxes_in_row([], _, _, []).
 
 find_boxes_in_row([Tile | RestTiles], Row, Col, [(Row, Col) | BoxCoords]) :-
-    box(Tile),
+    box_symbol(Tile),
     NextCol is Col + 1,
     find_boxes_in_row(RestTiles, Row, NextCol, BoxCoords).
 
@@ -107,10 +117,10 @@ get_board(Board, [], Board).
 get_board(OldBoard, [player_at(X, Y) | Rest], NewBoard) :-
     get_tile(OldBoard, X, Y, Tile),
     (
-        player(Tile) = player('@'),
+        player_symbol(Tile) = player_symbol('@'),
         replace_tile(OldBoard, X, Y, ' ', AfterBoard)
     ;
-        player(Tile) = player('+'),
+        player_symbol(Tile) = player_symbol('+'),
         replace_tile(OldBoard, X, Y, '.', AfterBoard)
     ),
     get_board(AfterBoard, Rest, NewBoard).
@@ -118,10 +128,10 @@ get_board(OldBoard, [player_at(X, Y) | Rest], NewBoard) :-
 get_board(OldBoard, [box_at(X, Y) | Rest], NewBoard) :-
     get_tile(OldBoard, X, Y, Tile),
     (
-        box(Tile) = box('$'),
+        box_symbol(Tile) = box_symbol('$'),
         replace_tile(OldBoard, X, Y, ' ', AfterBoard)
     ;
-        box(Tile) = box('*'),
+        box_symbol(Tile) = box_symbol('*'),
         replace_tile(OldBoard, X, Y, '.', AfterBoard)
     ),
     get_board(AfterBoard, Rest, NewBoard).
@@ -130,10 +140,10 @@ assert_board_in_row([], _, _).
 
 assert_board_in_row([Tile | RestTiles], Row, Col) :-
     (
-        wall(Tile),
+        wall_symbol(Tile),
         assert(wall_at(Col, Row))
     ;
-        goal(Tile),
+        goal_symbol(Tile),
         assert(goal_at(Col, Row))
     ),
     NextCol is Col + 1,
@@ -196,23 +206,19 @@ s(StateIn, StateOut, 1):-
     dir(_, (X, Y)),
     m(X, Y, StateIn, StateOut).
 
-print_list([]).
-print_list([Head | Tail]) :-
-    write(Head),
-    print_list(Tail).
-    
-print_map([]).
+check_boxes_in_goal([]).
 
-print_map([Head | Tail]):-
-    print_list(Head),
-    write('\n'),
-    print_map(Tail).
+check_boxes_in_goal([box_at(X, Y) | RestBoxes]) :-
+    goal_at(X, Y),
+    check_boxes_in_goal(RestBoxes).
 
-print_coordinates(X, Y) :-
-    write("X: "),
-    write(X),
-    write("\nY: "),
-    write(Y).
+goal([player_at(X, Y) | Boxes]) :-
+    (
+        check_boxes_in_goal(Boxes), 
+        goal_at(X, Y)
+    ;   
+        check_boxes_in_goal(Boxes)
+    ).
 
 test5:-
     example_level_3(GameMap),
@@ -236,7 +242,7 @@ test6:-
 
 test7:-
     example_level_3(GameMap),
-    map_loader(GameMap, State),
+    map_loader(GameMap, _),
     wall_at(X, Y),
     print_coordinates(X, Y),
     write('\n').

@@ -4,31 +4,25 @@
 */
 
 :- module(definitions, [
-    wall/1,
-    player/1,
-    goal/1,
-    score/1,
-    floor/1,
-    is_not_over/1,
-    box/1,  
+    wall_symbol/1,
+    floor_symbol/1,
+    player_symbol/1,
+    box_symbol/1,
+    goal_symbol/1,  
     player_at/2,
     box_at/2,
     dir/2
 ]).
 
-wall('#').
-player('@').
-player('+').
-goal('+').
-goal('.').
-goal('*').
-score('*').
-floor(' ').
-box('$').
-box('*').
-
-is_not_over('.').
-is_not_over('+').
+wall_symbol('#').
+floor_symbol(' ').
+player_symbol('@').
+player_symbol('+').
+box_symbol('$').
+box_symbol('*').
+goal_symbol('+').
+goal_symbol('.').
+goal_symbol('*').
 
 player_at(_X, _Y).
 box_at(_X, _Y).
