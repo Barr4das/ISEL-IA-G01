@@ -14,6 +14,7 @@
     player_at/2,
     box_at/2,
     gate_exists/1,
+    gate_open/1,
     dir/2
 ]).
 
@@ -34,6 +35,9 @@ box_at(_X, _Y).
 
 :- dynamic gate_exists/1.
 gate_exists(no).
+
+:- dynamic gate_open/1.
+gate_open(no).
 
 dir(up, (0,-1)).
 dir(down, (0,1)).

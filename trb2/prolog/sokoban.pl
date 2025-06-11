@@ -180,12 +180,17 @@ assert_board([BoardHead | BoardTail], CurrRow) :-
     NextRow is CurrRow + 1,
     assert_board(BoardTail, NextRow).
 
+% Is needed in tests
 cleanup():-
-    (gate_exists(yes) -> retract(gate_exists(yes)) ; true).
+    (
+        gate_exists(yes) -> 
+            retract(gate_exists(yes)), retract(gate_open(yes)) 
+    ; 
+        true
+    ).
 
 %            In       Out  
 map_loader(GameMap, State) :-
-    cleanup(),
     find_player(GameMap, Col, Row),
     find_boxes(GameMap, 0, Boxes),
     get_state(player_at(Row, Col), Boxes, State),
@@ -202,17 +207,10 @@ not_member(box_at(B1X, B1Y), [box_at(B2X, B2Y) | RestBoxes]) :-
     dif((B1X, B1Y), (B2X, B2Y)),
     not_member(box_at(B1X, B1Y), RestBoxes).
 
-is_gate_open(Open):-
-    (
-        gate_exists(yes), gate_open(yes) ->
-            Open = true
-    ;
-        Open = false
-    ).
-
 open_gate():-
     gate_at(GX, GY), 
-    retract(wall_at(GX, GY)).
+    retract(wall_at(GX, GY)),
+    assert(gate_open(yes)).
 
 m(MoveX, MoveY, [player_at(X, Y) | Boxes], [NewPlayer | NewBoxes]):-
     NewX is X + MoveX,
@@ -237,7 +235,7 @@ m(MoveX, MoveY, [player_at(X, Y) | Boxes], [NewPlayer | NewBoxes]):-
         NewPlayer = TempPlayer,
         ( 
             gate_exists(yes), goal_at(BX, BY), check_boxes_in_goal(NewBoxes) -> 
-            assert(gate_open(yes)), open_gate(), write("\nAll boxes in the goals\n"), write("\nGate is open\n"), !
+                open_gate(), write("\nAll boxes in the goals, "), write("Gate is open\n\n"), !
         ; true 
         )
     ).
@@ -256,8 +254,14 @@ check_boxes_in_goal([box_at(X, Y) | RestBoxes]) :-
 check_player_in_goal(player_at(X, Y)) :-
     final_goal_at(X, Y).
 
-goal([_ | Boxes]) :-
-    check_boxes_in_goal(Boxes).
+goal([Player | Boxes]) :-
+    (
+        gate_exists(yes), gate_open(yes) ->
+            check_player_in_goal(Player)
+    ;
+        gate_exists(no) ->
+            check_boxes_in_goal(Boxes)
+    ).
 
 test5:-
     example_level_3(GameMap),

@@ -153,6 +153,7 @@ bestf( [T | _], F) :-    % Best f-value of a list of trees
 bestf( [], 9999).         % No trees: bad f-value
 
 test9 :-
+    cleanup(),
     example_level_4(GameMap),
     map_loader(GameMap, State),
     %trace,
@@ -160,8 +161,8 @@ test9 :-
     print_list(Solution),
     write("\n"),
     (
-        gate_exists(yes), is_gate_open(Open) ->
-            write("\n"), write("Gate open = "), write(Open)
+        gate_exists(yes), gate_open(yes) ->
+            write("\n"), write("Gate is open")
     ;
         gate_exists(no) ->
             write("\nA gate is not present")
