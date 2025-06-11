@@ -13,7 +13,7 @@
     final_goal_symbol/1,
     player_at/2,
     box_at/2,
-    dynamic gate_at/2,
+    gate_exists/1,
     dir/2
 ]).
 
@@ -31,9 +31,9 @@ final_goal_symbol('?').
 
 player_at(_X, _Y).
 box_at(_X, _Y).
-:- dynamic gate_at/2.
-gate_at(_X, _Y).
-gate_at(-1, -1).
+
+:- dynamic gate_exists/1.
+gate_exists(no).
 
 dir(up, (0,-1)).
 dir(down, (0,1)).
