@@ -158,4 +158,12 @@ test9 :-
     %trace,
     bestfirst(State, Solution),
     print_list(Solution),
+    write("\n"),
+    (
+        gate_exists(yes), is_gate_open(Open) ->
+            write("\n"), write("Gate open = "), write(Open)
+    ;
+        gate_exists(no) ->
+            write("\nA gate is not present")
+    ),
     write("\n"). 
