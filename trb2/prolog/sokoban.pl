@@ -33,11 +33,23 @@ example_level_4(
     [
         ['#','#','#','#','#','#','#','#'],
         ['#','#','#',' ',' ',' ','#','#'],
+        ['#','?','%','@','$','.','#','#'],
+        ['#','#','#',' ',' ',' ','#','#'],
+        ['#',' ',' ',' ','$','.','#','#'],
+        ['#',' ',' ','$',' ','.','#','#'],
+        ['#','#','#','#','#','#','#','#']
+    ]
+).
+
+example_level_5(
+    [
+        ['#','#','#','#','#','#','#','#'],
+        ['#','#','#',' ',' ',' ','#','#'],
         ['#','.','@','$',' ',' ','#','#'],
         ['#','#','#',' ','$','.','#','#'],
         ['#','.','#','#','$',' ','#','#'],
         ['#',' ','#',' ','.',' ','#','#'],
-        ['#','$',' ','*','$','$','.','#'],
+        ['#','$',' ',' ','$','$','.','#'],
         ['#',' ',' ',' ','.',' ',' ','#'],
         ['#','#','#','#','#','#','#','#']
     ]
@@ -145,6 +157,12 @@ assert_board_in_row([Tile | RestTiles], Row, Col) :-
     ;
         goal_symbol(Tile),
         assert(goal_at(Col, Row))
+    ;
+        gate_symbol(Tile),
+        assert(gate_at(Col, Row))
+    ;
+        final_goal_symbol(Tile),
+        assert(final_goal_at(Col, Row))
     ),
     NextCol is Col + 1,
     assert_board_in_row(RestTiles, Row, NextCol).
@@ -183,6 +201,7 @@ m(MoveX, MoveY, [player_at(X, Y) | Boxes], [NewPlayer | NewBoxes]):-
     NewY is Y + MoveY,
     TempPlayer = player_at(NewX, NewY),
     \+ wall_at(NewX, NewY),
+    \+ gate_at(NewX, NewY),
     (
         % Move without pushing box
         not_member(TempPlayer, Boxes),
@@ -194,11 +213,17 @@ m(MoveX, MoveY, [player_at(X, Y) | Boxes], [NewPlayer | NewBoxes]):-
         BX is NewX + MoveX,
         BY is NewY + MoveY,
         \+ wall_at(BX, BY),
+        \+ gate_at(BX, BY),
         NewBox = box_at(BX, BY),
         not_member(NewBox, Boxes),
         select(box_at(NewX, NewY), Boxes, TempBoxes),
         NewBoxes = [ NewBox | TempBoxes],
-        NewPlayer = TempPlayer
+        NewPlayer = TempPlayer,
+        ( 
+            goal_at(BX, BY), check_boxes_in_goal(NewBoxes) -> 
+            gate_at(XX, YY), write("\n"), write(XX), write(" "), write(YY), write("\n"), write("\nAll boxes in the goals\n"), !
+        ; true 
+        )
     ).
    
 %   In       Out    C (cost)
@@ -212,13 +237,11 @@ check_boxes_in_goal([box_at(X, Y) | RestBoxes]) :-
     goal_at(X, Y),
     check_boxes_in_goal(RestBoxes).
 
-goal([player_at(X, Y) | Boxes]) :-
-    (
-        check_boxes_in_goal(Boxes), 
-        goal_at(X, Y)
-    ;   
-        check_boxes_in_goal(Boxes)
-    ).
+check_player_in_goal(player_at(X, Y)) :-
+    final_goal_at(X, Y).
+
+goal([_ | Boxes]) :-
+    check_boxes_in_goal(Boxes).
 
 test5:-
     example_level_3(GameMap),
@@ -246,3 +269,21 @@ test7:-
     wall_at(X, Y),
     print_coordinates(X, Y),
     write('\n').
+
+test8:-
+    example_level_4(GameMap),
+    map_loader(GameMap, _),
+    gate_at(X, Y),
+    print_coordinates(X, Y),
+    write('\n').
+
+test10:-
+    example_level_4(GameMap),
+    map_loader(GameMap, _),
+    gate_at(X, Y),
+    print_coordinates(X, Y),
+    retract(gate_at(X, Y)),
+    gate_at(-1, -1),
+    write("\nIts good\n"),
+    write('\n').
+

@@ -153,7 +153,7 @@ bestf( [T | _], F) :-    % Best f-value of a list of trees
 bestf( [], 9999).         % No trees: bad f-value
 
 test9 :-
-    example_level_3(GameMap),
+    example_level_4(GameMap),
     map_loader(GameMap, State),
     %trace,
     bestfirst(State, Solution),
