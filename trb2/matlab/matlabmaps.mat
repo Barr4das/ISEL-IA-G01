@@ -1,0 +1,117 @@
+exampleMap1 = struct();
+exampleMap1.map = [
+  '######';
+  '#@ $.#';
+  '######'
+];
+
+exampleMap2 = struct();
+exampleMap2.map = [
+    '######';
+    '# $ .#';
+    '#@   #';
+    '######'
+];
+
+exampleMap3 = struct();
+exampleMap3.map = [
+    '#######';
+    '#.$@$ #';
+    '#######'
+];
+
+clc;
+
+function newData = getInitialSolutionSokoban(data)
+
+    newData = data;
+    map = data.map;
+    
+    movements = {[0, -1], [0,  1], [-1, 0], [1, 0]};
+
+    % FIND PLAYER
+    [row, col] = find(map == '@');
+    if isempty(row)
+        [row, col] = find(map == '+');
+    end
+
+    % GENERATE MOVEMENT
+    mov = movements{randi(4)};
+    newRow = row + mov(1);
+    newCol = col + mov(2);
+
+    if newRow < 1 || newRow > size(map,1) || newCol < 1 || newCol > size(map,2)
+        return
+    end
+
+    newPos = map(newRow, newCol);
+
+    % INVALID MOVE CASE
+    if newPos == '#'
+        return
+    end
+
+    % PUSH CASE
+    if newPos == '$' || newPos == '*'
+        checkRow = newRow + mov(1);
+        checkCol = newCol + mov(2);
+
+        if checkRow < 1 || checkRow > size(map,1) || checkCol < 1 || checkCol > size(map,2)
+            return
+        end
+
+        % nova posição
+        checkPos = map(checkRow, checkCol);
+
+        % INVALID PUSH CASE
+        if checkPos == '#' || checkPos == '$' || checkPos == '*'
+            return
+        end
+
+        % MOVE BOX
+        if checkPos == '.'
+            map(checkRow, checkCol) = '*';
+        else
+            map(checkRow, checkCol) = '$';
+        end
+
+        % MOVE PLAYER
+        if newPos == '*'
+            map(newRow, newCol) = '+';
+        else
+            map(newRow, newCol) = '@';
+        end
+
+        if map(row, col) == '+'
+            map(row, col) = '.';
+        else
+            map(row, col) = ' ';
+        end
+
+        newData.map = map;
+        return
+    end
+
+    % BASE MOVE CASE
+    if newPos == '.' 
+        map(newRow, newCol) = '+';
+    else
+        map(newRow, newCol) = '@';
+    end
+
+    if map(row, col) == '+'
+        map(row, col) = '.';
+    else
+        map(row, col) = ' ';
+    end
+
+    newData.map = map;
+end
+
+disp('Mapa inicial:');
+disp(exampleMap3.map);
+
+move = getInitialSolutionSokoban(exampleMap3);
+
+disp('Output:');
+disp(move.map);
