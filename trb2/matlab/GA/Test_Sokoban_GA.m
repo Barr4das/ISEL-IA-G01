@@ -5,8 +5,8 @@ function Test_Sokoban_GA()
 
     clc; % Clear screen
 
-    map = struct();
-    map.map = [
+    dataBoard = struct();
+    dataBoard.map = [
     '######';
     '# $ .#';
     '#@   #';
@@ -14,19 +14,19 @@ function Test_Sokoban_GA()
     ];
     
     % String size = N
-    N = 200;
+    N = 5;
     % Optimum = 200 = sum(max number of ones)
     optimum = 0;
     % Create struct data that will contain problem data
-    data = struct('N', N, 'optimum', optimum, 'map', map);
+    data = struct('N', N, 'optimum', optimum, 'dataBoard', dataBoard);
 
     % Max number of iterations (generations)
-    tmax      = 200;
+    tmax      = 2000;
     % Population size
     popSize   = 100;
     % Cross and mutation probability
-    crossProb = 0.7;
-    mutProb   = 0.1; % change
+    crossProb = 0.5;
+    mutProb   = 0.3; % change
 
     % Run Tests
     NumbOfTests = length(tmax);  
@@ -40,13 +40,11 @@ function Test_Sokoban_GA()
         fprintf('============================\n');
         % GA algorithm
         Results = Sokoban_GA(data, tmax(f), popSize(f), crossProb(f), ...
-             mutProb(f), @select, @cross, @mutate, ...
-             @getInitialSolution, ...
-             @evalFunction, @isOptimum);
-        
+             mutProb(f));
         
         Res = [[Results.NumEvaluations]; [Results.Cost]];
         fprintf('%d\t\t%d\n', Res);
     end
 end
                     
+Test_Sokoban_GA();

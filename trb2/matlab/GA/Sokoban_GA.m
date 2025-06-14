@@ -1,5 +1,4 @@
-
-function Res = Sokoban_GA(tmax, popSize, crossProb, mutProb, data)
+function Res = Sokoban_GA(data, tmax, popSize, crossProb, mutProb)
     %
     % Genetic algorithm
     % Make t = 0;
@@ -103,7 +102,7 @@ function newPop = mutate(data, pop, mutProb)
     probs = rand(popSize, 1);
     for j = 1:popSize
         if probs(j) < mutProb
-            allVals = 0:N;
+            allVals = 0:4;
             oldVal = newPop(j, mutIdxs(j));
             possibleMut = allVals(allVals ~= oldVal);
             % Pick a random new value from the other values
@@ -146,7 +145,7 @@ end
 % Evaluation function 
 % A solution s is represented as a string of N moves.
 function c = evalFunction(s, data)
-    map = doMoves(s, data.map);
+    map = doMoves(s, data.dataBoard);
 
     [goalRows, goalCols] = find(map == '.' | map == '+');
     [boxRows, boxCols] = find(map == '$');
@@ -156,6 +155,13 @@ function c = evalFunction(s, data)
     boxesNotOnGoals = sum(map(:) == '$');
 
     scoreBoxes = 10 * (boxesNotOnGoals - boxesOnGoals);
+
+    if (boxesNotOnGoals == 0)
+        c = 0;
+        disp(s);
+        return
+    end
+
 
     totalBoxDistance = 0;
     for i = 1:length(boxRows)
@@ -191,13 +197,13 @@ function c = evalFunction(s, data)
     moves = sum(s ~= 0);
    
     % Evaluate
-    c = moves + totalBoxDistance + scoreBoxes + deadlockPenalty;
+    c = 5 * moves + totalBoxDistance + scoreBoxes + deadlockPenalty;
 end
 
 function AfterMove = doMove(dir, map)    
     movements = {[0, -1], [0,  1], [-1, 0], [1, 0]};
-
-    mov = movements(dir);
+    
+    mov = movements{dir};
 
     % FIND PLAYER
     [row, col] = find(map == '@');
@@ -209,6 +215,7 @@ function AfterMove = doMove(dir, map)
     newCol = col + mov(1);
 
     if newRow < 1 || newRow > size(map,1) || newCol < 1 || newCol > size(map,2)
+        AfterMove = map;
         return
     end
 
@@ -216,15 +223,17 @@ function AfterMove = doMove(dir, map)
 
     % INVALID MOVE CASE
     if newPos == '#'
+        AfterMove = map;
         return
     end
 
     % PUSH CASE
     if newPos == '$' || newPos == '*'
-        checkRow = newRow + mov(1);
-        checkCol = newCol + mov(2);
+        checkRow = newRow + mov(2);
+        checkCol = newCol + mov(1);
 
         if checkRow < 1 || checkRow > size(map,1) || checkCol < 1 || checkCol > size(map,2)
+            AfterMove = map;
             return
         end
 
@@ -233,6 +242,7 @@ function AfterMove = doMove(dir, map)
 
         % INVALID PUSH CASE
         if checkPos == '#' || checkPos == '$' || checkPos == '*'
+            AfterMove = map;
             return
         end
 
@@ -276,13 +286,15 @@ function AfterMove = doMove(dir, map)
     AfterMove = map;
 end
 
-function FM = doMoves(moves, map)
-    aux = map;
-    for m = 1 : moves
-        if (m ~= 0) 
-            aux = doMove(m, aux);
+function FM = doMoves(moves, dataBoard)
+    % Extrai o mapa do campo .map
+    aux = dataBoard.map;
+    % Para cada elemento em moves, usa-o diretamente como direção
+    for k = 1 : numel(moves)
+        dir = moves(k);
+        if dir ~= 0
+            aux = doMove(dir, aux);
         end
-    end 
+    end
     FM = aux;
 end
-           
