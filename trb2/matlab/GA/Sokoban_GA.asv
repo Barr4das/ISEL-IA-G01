@@ -13,8 +13,9 @@ function Res = Sokoban_GA(tmax, popSize, crossProb, mutProb, data)
     %   Step 5 Evaluate P(t)
     %
     %
-
-    sense = 'minimize';
+    
+    % Maximization problem
+    sense = 'maximize';
 
     Res = GA(data, tmax, popSize, crossProb, ...
              mutProb, @select, @cross, @mutate, ...
@@ -92,6 +93,7 @@ function newPop = onePointCrossover(data, pop, crossProb)
     end
  end
 
+
 % Mutation
 function newPop = mutate(data, pop, mutProb)
     % N
@@ -106,8 +108,9 @@ function newPop = mutate(data, pop, mutProb)
             allVals = 0:N;
             oldVal = newPop(j, mutIdxs(j));
             possibleMut = allVals(allVals ~= oldVal);
-            % Pick a random new value from the other values
-            newPop(j, mutIdxs(j)) = possibleMut(randi(numel(possibleMut)));
+            
+            % Pick a random new value from the remaining options
+            newPop(j, mutIdxs(j)) = possibleVals(randi(numel(possibleVals)));
         end
     end
 end
@@ -205,8 +208,8 @@ function AfterMove = doMove(dir, map)
         [row, col] = find(map == '+');
     end
   
-    newRow = row + mov(2);
-    newCol = col + mov(1);
+    newRow = row + mov(1);
+    newCol = col + mov(2);
 
     if newRow < 1 || newRow > size(map,1) || newCol < 1 || newCol > size(map,2)
         return

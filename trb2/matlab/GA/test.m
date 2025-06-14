@@ -1,5 +1,6 @@
 function c = evalFunction(s, data)
     map = data.map;
+    
 
     [goalRows, goalCols] = find(map == '.' | map == '+');
     [boxRows, boxCols] = find(map == '$');
@@ -46,15 +47,3 @@ function c = evalFunction(s, data)
     % Evaluate
     c = moves + totalBoxDistance + scoreBoxes + deadlockPenalty;
 end
-
-s = [1, 2, 0, 3, 4];
-
-data = struct();
-    map.map = [
-    '######';
-    '# $ .#';
-    '#@   #';
-    '######'
-    ];
-
-test = evalFunction(s, data);
